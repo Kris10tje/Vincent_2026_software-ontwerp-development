@@ -1,6 +1,6 @@
 package whistapp.domain;
 
-import whistapp.domain.cards.Card;
+import whistapp.domain.Interfaces.*;
 import whistapp.domain.cards.Suit;
 import whistapp.domain.game.Game;
 import whistapp.domain.players.Player;
@@ -9,19 +9,19 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class Trick {
+public class Trick implements ITrick {
 
-    private final LinkedHashMap<Player, Card> playedCards;
+    private final LinkedHashMap<IPlayer, ICard> playedCards;
 
     private Suit leadSuit;
 
-    private Player currentPlayer;
+    private IPlayer currentPlayer;
 
     /* -------------------------------------------------------------------------- */
     /*                                Constructors                                */
     /* -------------------------------------------------------------------------- */
 
-    public Trick(Player startingPlayer) {
+    public Trick(IPlayer startingPlayer) {
         playedCards = new LinkedHashMap<>();
         currentPlayer = startingPlayer;
     }
@@ -38,7 +38,7 @@ public class Trick {
      * @throws IllegalStateException    All players already played.
      * @throws IllegalArgumentException The given player already played a card.
      */
-    protected void addCard(Card card, ArrayList<Player> players)
+    protected void addCard(ICard card, ArrayList<IPlayer> players)
             throws IllegalStateException, IllegalArgumentException {
         if (playedCards.size() >= Game.NUMBER_OF_PLAYERS) {
             throw new IllegalStateException("Can't add a card to a full trick.");
@@ -65,9 +65,9 @@ public class Trick {
      * @throws IllegalStateException    All players already played.
      * @throws IllegalArgumentException The given player already played a card.
      */
-    public void playCardFromCurrentPlayerHand(String card, ArrayList<Player> players)
+    public void playCardFromCurrentPlayerHand(String card, ArrayList<IPlayer> players)
             throws IllegalStateException, IllegalArgumentException {
-        Card playedCard = getCurrentPlayer().playCard(card, getLeadSuit());
+        ICard playedCard = getCurrentPlayer().playCard(card, getLeadSuit());
         addCard(playedCard, players);
     }
 
@@ -80,18 +80,18 @@ public class Trick {
      * @return The winner of this trick.
      * @throws IllegalStateException Not all players have played a card in this trick.
      */
-    public Player determineWinner(Suit trumpSuit) throws IllegalStateException {
+    public IPlayer determineWinner(Suit trumpSuit) throws IllegalStateException {
         if (playedCards.size() != Game.NUMBER_OF_PLAYERS) {
             throw new IllegalStateException("Can't determine winner when not all players have played.");
         }
 
-        Player winner = null;
-        Card winningCard = null;
+        IPlayer winner = null;
+        ICard winningCard = null;
 
         // Because we use LinkedHashMap, this iterates in the exact order cards were played
-        for (Map.Entry<Player, Card> entry : playedCards.entrySet()) {
-            Player player = entry.getKey();
-            Card card = entry.getValue();
+        for (Map.Entry<IPlayer, ICard> entry : playedCards.entrySet()) {
+            IPlayer player = entry.getKey();
+            ICard card = entry.getValue();
 
             // The leader's card sets the baseline to beat
             if (winningCard == null) {
@@ -124,7 +124,7 @@ public class Trick {
      * @return True if the new card beats the other card,
      * False otherwise.
      */
-    private boolean beatsWinningCard(Card newCard, Card winningCard, Suit trumpSuit) {
+    private boolean beatsWinningCard(ICard newCard, ICard winningCard, Suit trumpSuit) {
         // These null-checks are added for if there is no trump suit
         boolean isNewCardTrump = trumpSuit != null && newCard.getSuit().equals(trumpSuit);
         boolean isWinningCardTrump = trumpSuit != null && winningCard.getSuit().equals(trumpSuit);
@@ -155,9 +155,9 @@ public class Trick {
     /**
      * A simple getter for finding the cards played per player.
      */
-    public LinkedHashMap<Player, String> getCardsAsStrings() {
-        LinkedHashMap<Player, String> cards = new LinkedHashMap<>();
-        for (Player player : this.playedCards.keySet()) {
+    public LinkedHashMap<IPlayer, String> getCardsAsStrings() {
+        LinkedHashMap<IPlayer, String> cards = new LinkedHashMap<>();
+        for (IPlayer player : this.playedCards.keySet()) {
             cards.put(player, this.playedCards.get(player).toString());
         }
         return cards;
@@ -173,7 +173,7 @@ public class Trick {
     /**
      * A simple getter for finding the current player playing in this trick.
      */
-    public Player getCurrentPlayer() {
+    public IPlayer getCurrentPlayer() {
         return currentPlayer;
     }
 

@@ -1,5 +1,6 @@
 package whistapp.domain.round;
 
+import whistapp.domain.Interfaces.*;
 import whistapp.domain.bids.Bid;
 import whistapp.domain.bids.BidType;
 import whistapp.domain.game.Game;
@@ -10,10 +11,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
-public abstract class Round {
+public abstract class Round implements IRound {
 
     protected Bid finalBid = null;
-    protected LinkedHashMap<Player, Integer> tricksWon;
+    protected LinkedHashMap<IPlayer, Integer> tricksWon;
     protected boolean wasFirstTry = true;
 
     public static final int NUMBER_OF_TRICKS = 13;
@@ -53,10 +54,10 @@ public abstract class Round {
      * {@code for (Player player : tricksWon.keySet())}
      * {@code   tricksWon.get(player) >= 0 && tricksWon.get(player) <= NUMBER_OF_TRICKS}
      */
-    public HashMap<Player, Integer> processRoundOutcome(HashMap<Player, Integer> tricksWon)
+    public HashMap<IPlayer, Integer> processRoundOutcome(HashMap<IPlayer, Integer> tricksWon)
             throws IllegalArgumentException {
         int count = 0;
-        for (Player player : getPlayers()) {
+        for (IPlayer player : getPlayers()) {
             int numberOfTricksWon = tricksWon.get(player);
             if (numberOfTricksWon < 0 || numberOfTricksWon > NUMBER_OF_TRICKS) {
                 throw new IllegalArgumentException("Invalid tricks won.");
@@ -66,11 +67,11 @@ public abstract class Round {
         if (count != NUMBER_OF_TRICKS) {
             throw new IllegalArgumentException("Invalid sum of tricks.");
         }
-        HashMap<Player, Integer> scores = getFinalBid().calculatePoints(tricksWon);
+        HashMap<IPlayer, Integer> scores = getFinalBid().calculatePoints(tricksWon);
 
         // We should also multiply by two if the deck had to be reshuffled when finding a bid
         if (!wasFirstTry) {
-            for (Player player : scores.keySet()) {
+            for (IPlayer player : scores.keySet()) {
                 scores.put(player, scores.get(player) * 2);
             }
         }
@@ -124,13 +125,13 @@ public abstract class Round {
      * @param finalBid The highest bid that was made.
      * @return A list of the players declaring this bid.
      */
-    protected static ArrayList<Player> determineBidDeclarers(HashMap<Player, BidType> bids, BidType finalBid) {
-        ArrayList<Player> declarers = new ArrayList<>();
+    protected static ArrayList<IPlayer> determineBidDeclarers(HashMap<IPlayer, BidType> bids, BidType finalBid) {
+        ArrayList<IPlayer> declarers = new ArrayList<>();
 
         // First: a special case if the type was ACCEPT
         if (finalBid == BidType.ACCEPT) {
             // We must find the original PROPOSAL player to form the duo team
-            for (Player player : bids.keySet()) {
+            for (IPlayer player : bids.keySet()) {
                 if (bids.get(player) == BidType.PROPOSAL) {
                     declarers.add(player);
                 }
@@ -138,7 +139,7 @@ public abstract class Round {
         }
 
         // We now add all the players that natively bid the final highest bid
-        for (Player player : bids.keySet()) {
+        for (IPlayer player : bids.keySet()) {
             if (bids.get(player) == finalBid) {
                 declarers.add(player);
             }
@@ -161,14 +162,14 @@ public abstract class Round {
     /**
      * Returns the players playing in this round.
      */
-    protected ArrayList<Player> getPlayers() {
+    protected ArrayList<IPlayer> getPlayers() {
         return new ArrayList<>(tricksWon.keySet());
     }
 
     /**
      * Returns a map containing the number of tricks won per player.
      */
-    public LinkedHashMap<Player, Integer> getTricksWon() {
+    public LinkedHashMap<IPlayer, Integer> getTricksWon() {
         return new LinkedHashMap<>(tricksWon);
     }
 
@@ -186,7 +187,7 @@ public abstract class Round {
      * @param bids The map of bids each player made.
      * @return The highest BidType.
      */
-    protected static BidType getHighestBid(HashMap<Player, BidType> bids) {
+    protected static BidType getHighestBid(HashMap<IPlayer, BidType> bids) {
         BidType highestBid = null;
         for (BidType bid : bids.values()) {
             if (highestBid == null || bid.isHigherBidThan(highestBid)) {
@@ -221,7 +222,7 @@ public abstract class Round {
      * <p><b>Precondition:</b> bidType is of a valid type:
      * {@code bidType.isValidBid()}
      */
-    public void setFinalBid(BidType bidType, ArrayList<Player> declarers, boolean wasFirstTry)
+    public void setFinalBid(BidType bidType, ArrayList<IPlayer> declarers, boolean wasFirstTry)
             throws IllegalArgumentException {
         if (!bidType.isValidFinalRoundBid())
             throw new IllegalArgumentException("Bid type is pass.");

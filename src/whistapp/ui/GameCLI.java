@@ -2,13 +2,16 @@ package whistapp.ui;
 
 import java.util.HashMap;
 
-import whistapp.application.*;
+import whistapp.domain.Interfaces.IController;
+import whistapp.domain.Interfaces.IGame;
 
 /**
  * Base CLI for game modes that run a Whist game loop.
  *
  */
-public abstract class GameCLI extends CLI {
+public abstract class GameCLI<TGame extends IGame> extends CLI {
+
+    protected TGame game;
 
     /* -------------------------------------------------------------------------- */
     /*                                Constructors                                */
@@ -70,7 +73,27 @@ public abstract class GameCLI extends CLI {
 
     protected abstract void startNewGame();
 
-    protected abstract void showAllRounds();
+    /**
+     * Drive the round loop: repeatedly play a round until the user indicates
+     * they do not want to play another round.
+     */
+    protected void showAllRounds() {
+        while (true) {
+            // Very important: advance the game to the next round before playing it!
+            game.startNewRound();
+
+            // Show the round and its result
+            showRound();
+            showRoundPoints();
+
+            // Ask whether to play another round
+            if (!getYesNo("\nDo you want to play another round?")) {
+                return;
+            }
+        }
+    }
+
+    protected abstract void showRound();
 
     /**
      * Shows an exit message and gracefully exits the game.
@@ -91,25 +114,6 @@ public abstract class GameCLI extends CLI {
     }
 
     /**
-     * Wait for the active player to be ready.
-     *
-     * <p>This is used because multiple players share the same screen.
-     * This allows the next player to take their turn privately.
-     */
-    protected void getReady() {
-        getInputString("Press enter when " + controller.getActivePlayerName() + " is ready.");
-        clearScreen();
-        informUser("It's " + controller.getActivePlayerName() + "'s turn.");
-    }
-
-    /**
-     * Display the hand of the active player.
-     */
-    protected void showHand() {
-        showHand("Your Hand:", controller.getCards());
-    }
-
-    /**
      * Display a given hand.
      */
     protected void showHand(String header, String[] cards) {
@@ -126,27 +130,7 @@ public abstract class GameCLI extends CLI {
         ioProvider.writeLine("");
     }
 
-    /**
-     * Displays the hands of the open msierie players.
-     */
-    protected void showOpenMiserieHands() {
-        HashMap<String, String[]> cards = controller.getOpenMiserieHands();
-        
-        // Print a purposeful notice when the active player is an Open Miserie declarer
-        if ("Open Miserie".equals(controller.getFinalBidName())) {
-            for (String declarer : controller.getFinalBidDeclarers()) {
-                if (declarer.equals(controller.getActivePlayerName())) {
-                    ioProvider.writeLine("(Your own Open Miserie hand is shown below under 'Your Hand'.)\n");
-                    break;
-                }
-            }
-        }
-        
-        if (cards.isEmpty()) return;
-        for (String playerName : cards.keySet()) {
-            showHand(playerName + "'s Hand (Open Miserie):", cards.get(playerName));
-        }
-    }
+
 
     /**
      * Display the final game results.
@@ -180,10 +164,10 @@ public abstract class GameCLI extends CLI {
      */
     protected void showPlayerPoints() {
         // Retrieve the final cumulative scores for each player
-        HashMap<String, Integer> scores = controller.getGameScoresPerPlayer();
+        HashMap<String, Integer> scores = game.getScoresPerPlayer();
 
         // Print the scores for each player
-        for (String playerName : controller.getPlayerNames()) {
+        for (String playerName : game.getPlayerNames()) {
             ioProvider.writeLine(playerName + ": " + scores.get(playerName) + " points");
         }
     }

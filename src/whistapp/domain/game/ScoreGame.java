@@ -2,17 +2,14 @@ package whistapp.domain.game;
 
 import whistapp.domain.players.Player;
 import whistapp.domain.round.ScoreRound;
+import whistapp.domain.Interfaces.*;
 import whistapp.domain.bids.BidType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
-public class ScoreGame extends Game {
-
-    private final ArrayList<ScoreRound> rounds = new ArrayList<>(); // Multiple rounds per game
-
-    private ScoreRound currentRound;
+public class ScoreGame extends Game<IScoreRound> implements IScoreGame {
 
     /**
      * A no-arg constructor for the ScoreGame class.
@@ -33,6 +30,12 @@ public class ScoreGame extends Game {
         // No Bots allowed in a ScoreGame
         initializeHumanPlayers(players);
     }
+
+    @Override
+    protected IScoreRound createRound() {
+        return new ScoreRound(getPlayers());
+    }
+
 
     /* -------------------------------------------------------------------------- */
     /*                               Public methods                               */
@@ -64,12 +67,6 @@ public class ScoreGame extends Game {
 
     }
 
-    @Override
-    public void startNewRound() {
-        ScoreRound round = new ScoreRound(getPlayers());
-        rounds.add(round);
-        currentRound = round;
-    }
 
     /**
      * Transforms a String-BidType map into a Player-BidType
@@ -77,9 +74,8 @@ public class ScoreGame extends Game {
      *
      * @param bids The map of player names to bids.
      */
-    @Override
     public void registerBids(HashMap<String, String> bids) {
-        LinkedHashMap<Player, BidType> playerBids = new LinkedHashMap<>();
+        LinkedHashMap<IPlayer, BidType> playerBids = new LinkedHashMap<>();
 
         // Ensure we preserve the order of players by iterating over Game's players list
         for (Player player : getPlayers()) {
@@ -98,14 +94,6 @@ public class ScoreGame extends Game {
     /*                                   Getters                                  */
     /* -------------------------------------------------------------------------- */
 
-    /**
-     * A simple getter returning the current round in this score game.
-     *
-     * @return The current round of this game.
-     */
-    protected ScoreRound getCurrentRound() {
-        return currentRound;
-    }
 
     /* -------------------------------------------------------------------------- */
     /*                                   Setters                                  */
@@ -116,7 +104,6 @@ public class ScoreGame extends Game {
      *
      * @param reshuffled True if reshuffled, false otherwise.
      */
-    @Override
     public void setReshuffledState(boolean reshuffled) {
         getCurrentRound().setWasFirstTry(!reshuffled);
     }

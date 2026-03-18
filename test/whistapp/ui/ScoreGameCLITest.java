@@ -9,7 +9,8 @@ import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 
-import whistapp.application.*;
+import whistapp.domain.Interfaces.IController;
+import whistapp.domain.Interfaces.IScoreGame;
 import whistapp.ui.TestClasses.TestScoreGameCLI;
 
 public class ScoreGameCLITest {
@@ -29,10 +30,11 @@ public class ScoreGameCLITest {
     @DisplayName("Start new game - controller throws exception on first call")
     void testStartNewGame_ControllerThrowsException(){
         //Arrange
+        IScoreGame mockGame = mock(IScoreGame.class);
         when(mockInputOutput.readLine()).thenReturn(
             "Alice", "Bob", "Charlie", "Diana", "Alice", "Bob", "Charlie", "Diana");
-        doThrow(new IllegalArgumentException("invalid players"))
-            .doNothing()
+        doThrow(new IllegalArgumentException("invalid players")) //first call throws exception
+            .doReturn(mockGame) //second call returns a game
             .when(mockController)
             .startNewScoreGame(any(ArrayList.class));
         

@@ -3,10 +3,12 @@ package whistapp.domain.cards;
 import java.util.ArrayList;
 import java.util.Comparator;
 
+import whistapp.domain.Interfaces.ICard;
+
 /**
  * Represents a card in the game of Whist.
  */
-public class Card {
+public class Card implements ICard {
 
     private Suit suit;
     private Value value;
@@ -38,10 +40,10 @@ public class Card {
     /**
      * A simple helper method that sorts a given list of cards.
      */
-    public static void sortCards(ArrayList<Card> cards) {
-        cards.sort(new Comparator<Card>() {
+    public static void sortCards(ArrayList<ICard> cards) {
+        cards.sort(new Comparator<ICard>() {
             @Override
-            public int compare(Card c1, Card c2) {
+            public int compare(ICard c1, ICard c2) {
                 if (c1.getSuit() == c2.getSuit()) {
                     return c1.getValue().compareTo(c2.getValue());
                 } else {

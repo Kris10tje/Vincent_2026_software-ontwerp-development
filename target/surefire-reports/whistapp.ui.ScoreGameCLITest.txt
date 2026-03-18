@@ -1,0 +1,19 @@
+-------------------------------------------------------------------------------
+Test set: whistapp.ui.ScoreGameCLITest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.026 s <<< FAILURE! -- in whistapp.ui.ScoreGameCLITest
+whistapp.ui.ScoreGameCLITest.testStartNewGame_ControllerThrowsException -- Time elapsed: 0.023 s <<< ERROR!
+org.mockito.exceptions.base.MockitoException: 
+
+Only void methods can doNothing()!
+Example of correct use of doNothing():
+    doNothing().
+    doThrow(new RuntimeException())
+    .when(mock).someVoidMethod();
+Above means:
+someVoidMethod() does nothing the 1st time but throws an exception the 2nd time is called
+	at whistapp.ui.ScoreGameCLITest.testStartNewGame_ControllerThrowsException(ScoreGameCLITest.java:37)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+

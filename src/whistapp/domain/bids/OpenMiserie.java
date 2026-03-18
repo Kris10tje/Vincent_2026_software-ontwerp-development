@@ -1,6 +1,6 @@
 package whistapp.domain.bids;
 
-import whistapp.domain.players.Player;
+import whistapp.domain.Interfaces.IPlayer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +14,7 @@ public class OpenMiserie extends Miserie {
     /*                                Constructors                                */
     /* -------------------------------------------------------------------------- */
 
-    public OpenMiserie(ArrayList<Player> declarers) throws IllegalArgumentException {
+    public OpenMiserie(ArrayList<IPlayer> declarers) throws IllegalArgumentException {
         super(declarers);
     }
 
@@ -23,9 +23,9 @@ public class OpenMiserie extends Miserie {
     /* -------------------------------------------------------------------------- */
 
     @Override
-    public HashMap<Player, String[]> getOpenMiserieHands(Player currentPlayer) {
-        HashMap<Player, String[]> openMiserieHands = new HashMap<>();
-        for (Player declarer : declarers) {
+    public HashMap<IPlayer, String[]> getOpenMiserieHands(IPlayer currentPlayer) {
+        HashMap<IPlayer, String[]> openMiserieHands = new HashMap<>();
+        for (IPlayer declarer : declarers) {
             if (!declarer.equals(currentPlayer)) {
                 openMiserieHands.put(declarer, declarer.getHandCards());
             }

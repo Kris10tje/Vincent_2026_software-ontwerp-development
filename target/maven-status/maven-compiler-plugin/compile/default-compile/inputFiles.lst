@@ -17,6 +17,13 @@ C:\Repos\Prive\KULAK_software-ontwerp-development\KULAK_software-ontwerp-develop
 C:\Repos\Prive\KULAK_software-ontwerp-development\KULAK_software-ontwerp-development\submission\src\whistapp\domain\game\Game.java
 C:\Repos\Prive\KULAK_software-ontwerp-development\KULAK_software-ontwerp-development\submission\src\whistapp\domain\game\PlayGame.java
 C:\Repos\Prive\KULAK_software-ontwerp-development\KULAK_software-ontwerp-development\submission\src\whistapp\domain\game\ScoreGame.java
+C:\Repos\Prive\KULAK_software-ontwerp-development\KULAK_software-ontwerp-development\submission\src\whistapp\domain\Interfaces\IController.java
+C:\Repos\Prive\KULAK_software-ontwerp-development\KULAK_software-ontwerp-development\submission\src\whistapp\domain\Interfaces\IGame.java
+C:\Repos\Prive\KULAK_software-ontwerp-development\KULAK_software-ontwerp-development\submission\src\whistapp\domain\Interfaces\IPlayGame.java
+C:\Repos\Prive\KULAK_software-ontwerp-development\KULAK_software-ontwerp-development\submission\src\whistapp\domain\Interfaces\IPlayRound.java
+C:\Repos\Prive\KULAK_software-ontwerp-development\KULAK_software-ontwerp-development\submission\src\whistapp\domain\Interfaces\IRound.java
+C:\Repos\Prive\KULAK_software-ontwerp-development\KULAK_software-ontwerp-development\submission\src\whistapp\domain\Interfaces\IScoreGame.java
+C:\Repos\Prive\KULAK_software-ontwerp-development\KULAK_software-ontwerp-development\submission\src\whistapp\domain\Interfaces\IScoreRound.java
 C:\Repos\Prive\KULAK_software-ontwerp-development\KULAK_software-ontwerp-development\submission\src\whistapp\domain\players\BotDifficulty.java
 C:\Repos\Prive\KULAK_software-ontwerp-development\KULAK_software-ontwerp-development\submission\src\whistapp\domain\players\BotPlayer.java
 C:\Repos\Prive\KULAK_software-ontwerp-development\KULAK_software-ontwerp-development\submission\src\whistapp\domain\players\HighBot.java

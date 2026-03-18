@@ -1,6 +1,6 @@
 package whistapp.domain.bids;
 
-import whistapp.domain.players.Player;
+import whistapp.domain.Interfaces.IPlayer;
 
 import java.util.ArrayList;
 
@@ -81,7 +81,7 @@ public enum BidType {
      * @param declarers The declarers for this bid.
      * @return A Bid object corresponding to the BidType.
      */
-    public Bid createBidFromBidType(ArrayList<Player> declarers) {
+    public Bid createBidFromBidType(ArrayList<IPlayer> declarers) {
         return switch (this) {
             case PASS -> null;
             case PROPOSAL -> new ProposalAlone(declarers.getFirst());

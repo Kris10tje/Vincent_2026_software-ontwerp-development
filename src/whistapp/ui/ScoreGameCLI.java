@@ -1,6 +1,8 @@
 package whistapp.ui;
 
 import whistapp.application.*;
+import whistapp.domain.Interfaces.IController;
+import whistapp.domain.Interfaces.IScoreGame;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,7 +11,7 @@ import java.util.HashMap;
 /**
  * CLI for tracking the score of a physical Whist game.
  */
-public class ScoreGameCLI extends GameCLI {
+public class ScoreGameCLI extends GameCLI<IScoreGame> {
 
     /* -------------------------------------------------------------------------- */
     /*                                Constructors                                */
@@ -65,7 +67,7 @@ public class ScoreGameCLI extends GameCLI {
             try {
 
                 // There are never bots in a score game so [# real players == # players]
-                controller.startNewScoreGame(players);
+                game = controller.startNewScoreGame(players);
 
             } catch (Exception e) {
 
@@ -84,24 +86,6 @@ public class ScoreGameCLI extends GameCLI {
         }
     }
 
-    /**
-     * Drive the round loop: repeatedly play a round until the user indicates
-     * they do not want to play another round.
-     */
-    protected void showAllRounds() {
-        while (true) {
-            // Very important: advance the game to the next round before playing it!
-            controller.nextRound();
-
-            showRound();
-            showRoundPoints();
-
-            // Continue or stop
-            if (!getYesNo("\nDo you want to play another round?")) {
-                return;
-            }
-        }
-    }
 
     /**
      * Interactively register a single round:
@@ -177,7 +161,7 @@ public class ScoreGameCLI extends GameCLI {
 
             // Try to register the number of tricks won per player, if it fails clear the screen and ask again
             try {
-                controller.registerNbOfTricksWonPerPlayer(nbOfTricksWonPerPlayer);
+                game.updateScores(nbOfTricksWonPerPlayer);
             } catch (Exception e) {
                 clearScreen();
                 ioProvider.writeLine("Couldn't register number of tricks won per player: " + e.getMessage());
@@ -187,7 +171,7 @@ public class ScoreGameCLI extends GameCLI {
             // Feedback
             clearScreen();
             informUser("Round results registered successfully. Here's a summary:");
-            ArrayList<String> playersNames = controller.getPlayerNames();
+            ArrayList<String> playersNames = game.getPlayerNames();
             for (String playerName : playersNames) {
                 ioProvider.writeLine(playerName + ": " + nbOfTricksWonPerPlayer.get(playerName));
             }
@@ -206,7 +190,7 @@ public class ScoreGameCLI extends GameCLI {
         boolean reshuffled = this.getReshuffleState();
 
         // Register the reshuffle state in the domain layer
-        controller.setReshuffledState(reshuffled);
+        game.setReshuffledState(reshuffled);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -240,7 +224,7 @@ public class ScoreGameCLI extends GameCLI {
      */
     private void promptForBids() {
         // Get the player names from the domain layer to know which players to ask for
-        ArrayList<String> playersNames = this.controller.getPlayerNames();
+        ArrayList<String> playersNames = game.getPlayerNames();
 
         HashMap<String, String> bids = new HashMap<>();
 
@@ -254,7 +238,7 @@ public class ScoreGameCLI extends GameCLI {
         }
 
         // Register the collected bids
-        controller.registerBids(bids);
+        game.registerBids(bids);
     }
 
     /**
@@ -265,7 +249,7 @@ public class ScoreGameCLI extends GameCLI {
     private HashMap<String, Integer> getNbOfTricksWonPerPlayer() {
 
         // Get the player names from the domain layer to know which players to ask for
-        ArrayList<String> playersNames = this.controller.getPlayerNames();
+        ArrayList<String> playersNames = game.getPlayerNames();
 
         // Ask for each player and store the result in a HashMap
         HashMap<String, Integer> nbOfTricksPerPlayer = new HashMap<>();

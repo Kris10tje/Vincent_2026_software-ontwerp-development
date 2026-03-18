@@ -1,13 +1,16 @@
 package whistapp.ui;
 
 import whistapp.application.*;
+import whistapp.domain.Interfaces.IController;
+import whistapp.domain.Interfaces.IPlayGame;
 
 import java.util.*;
 
 /**
  * CLI for playing a virtual game of Whist.
  */
-public class PlayGameCLI extends GameCLI {
+public class PlayGameCLI extends GameCLI<IPlayGame> {
+
 
     /* -------------------------------------------------------------------------- */
     /*                                Constructors                                */
@@ -17,6 +20,7 @@ public class PlayGameCLI extends GameCLI {
      * Create a PlayGameCLI bound to the given controller.
      *
      * @param controller the application controller used to manage the game
+     * @param ioProvider the input/output provider for user interaction
      */
     public PlayGameCLI(IController controller, InputOutputProvider ioProvider) {
         super(controller, ioProvider);
@@ -114,7 +118,7 @@ public class PlayGameCLI extends GameCLI {
 
                 // Start the game with the given players and bot difficulties
                 try {
-                    controller.startNewPlayGame(playerMap);
+                    game = controller.startNewPlayGame(playerMap);
                 } catch (Exception e) {
 
                     clearScreen();
@@ -136,25 +140,7 @@ public class PlayGameCLI extends GameCLI {
         }
     }
 
-    /**
-     * Drive the round loop: repeatedly play a round until the user indicates
-     * they do not want to play another round.
-     */
-    protected void showAllRounds() {
-        while (true) {
-            // Very important: advance the game to the next round before playing it!
-            controller.nextRound();
-
-            // Show the round and its result
-            showRound();
-            showRoundPoints();
-
-            // Ask whether to play another round
-            if (!getYesNo("\nDo you want to play another round?")) {
-                return;
-            }
-        }
-    }
+    
 
     /* -------------------------------------------------------------------------- */
     /*                                 Private Methods                            */
@@ -187,11 +173,12 @@ public class PlayGameCLI extends GameCLI {
      * After that, the trick phase begins where players play cards until
      * no tricks remain in the round.
      */
-    private void showRound() {
+    @Override
+    protected void showRound() {
 
         // Print out round start info
         clearScreen();
-        informUser("Starting a new round!\nThe dealer is: " + controller.getDealerName());
+        informUser("Starting a new round!\nThe dealer is: " + game.getDealerName());
 
         showRoundBiddingPhase();
 
@@ -199,8 +186,8 @@ public class PlayGameCLI extends GameCLI {
         clearScreen();
         printSeparator();
         ioProvider.writeLine("THE BIDDING PHASE HAS ENDED.");
-        ioProvider.writeLine("Winning bid: " + controller.getFinalBidName());
-        ioProvider.writeLine("Declarer(s): " + String.join(", ", controller.getFinalBidDeclarers()));
+        ioProvider.writeLine("Winning bid: " + game.getFinalBidName());
+        ioProvider.writeLine("Declarer(s): " + String.join(", ", game.getFinalBidDeclarers()));
         printSeparator();
 
         // We wait for user before starting the tricks
@@ -210,12 +197,27 @@ public class PlayGameCLI extends GameCLI {
         informUser("Starting the trick playing phase of the round.");
 
         // Start the trick phase in the domain layer
-        controller.startPlayingRound();
+        game.startPlayingRound();
 
         showRoundTrickPhase();
 
         // Calculate and apply scores for this round.
-        controller.updateScores();
+        game.calculateAndUpdateScores();
+    }
+
+    
+    /**
+     * A getter for the index of the player whose turn it currently is.
+     *
+     * @return the index of the player whose turn it currently is.
+     */
+    public int getActivePlayerIndex() {
+        try {
+            String activePlayerName = game.getActivePlayerName();
+            return game.getPlayerNames().indexOf(activePlayerName);
+        } catch (IllegalStateException e) {
+            return -1;
+        }
     }
 
     /**
@@ -227,14 +229,14 @@ public class PlayGameCLI extends GameCLI {
         while (true) {
 
             // Loop until we have a valid final (winning) bid
-            while (!controller.biddingStabilised()) {
+            while (!biddingStabilised()) {
 
                 // Pass to the next player
-                int activePlayerIndex = controller.getActivePlayerIndex();
+                int activePlayerIndex = getActivePlayerIndex();
 
                 // Check if player is a bot
-                if (controller.isAutonomous(activePlayerIndex)) {
-                    controller.proceedAutonomousBid();
+                if (game.isAutonomous(activePlayerIndex)) {
+                    game.proceedAutonomousBid();
                     continue;
                 }
 
@@ -255,11 +257,11 @@ public class PlayGameCLI extends GameCLI {
                         showHand();
 
                         // Get the bid choice
-                        String chosenBid = getChoice("Choose your bid", controller.getPossibleBids());
-                        if (controller.bidRequiresTrumpDeclaration(chosenBid)) {
-                            controller.registerBid(chosenBid, getChoice("Choose your preferred trump suit", controller.getSuits()));
+                        String chosenBid = getChoice("Choose your bid", game.getPossibleBidNames());
+                        if (game.bidRequiresTrumpDeclaration(chosenBid)) {
+                            game.submitBid(chosenBid, getChoice("Choose your preferred trump suit", controller.getSuits()));
                         } else {
-                            controller.registerBid(chosenBid);
+                            game.submitBid(chosenBid, null);
                         }
 
                         // Stop the loop and pass to the next player
@@ -274,20 +276,20 @@ public class PlayGameCLI extends GameCLI {
 
             }
 
-            String proposerName = controller.getLoneProposerName();
+            String proposerName = game.getLoneProposerName();
             if (proposerName == null) {
                 break;
             } else {
                 getInputString("Press enter when " + proposerName + " is ready to choose to play the bid alone or pass.");
                 clearScreen();
 
-                showHand("Your Hand:", controller.getCards(proposerName));
+                showHand("Your Hand:", game.getPlayerCards(proposerName));
 
                 boolean choice = getYesNo("Do you want to play the bid alone?");
                 if (choice) {
                     // The proposer wishes to play alone.
-                    controller.registerLoneProposer(proposerName);
-                    controller.biddingStabilised();
+                    game.registerLoneProposer(proposerName);
+                    biddingStabilised();
                     break;
                 }
             }
@@ -296,29 +298,63 @@ public class PlayGameCLI extends GameCLI {
     }
 
     /**
+     * A function that parses the round bidtype, when everyone has picked a bid.
+     *
+     * @return {@code true} if bidding has stabilized and at least one person has picked a bid. {@code false} if everone passed and there was a reshuffle.
+     */
+    private boolean biddingStabilised() {
+        try {
+            boolean stabilised = game.evaluateRoundBids();
+            if (!stabilised) {
+                System.out.println("Everyone passed! Reshuffling and dealing new cards...");
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException ignored) {
+                }
+                game.restartFailedRound();
+            }
+            return stabilised;
+        } catch (IllegalStateException e) {
+            return false;
+        }
+    }
+
+    /**
      * Show all existing bids made by players
      */
     private void showExistingBids() {
-        ioProvider.writeLine(controller.getExistingBids() + "\n");
+        ioProvider.writeLine(game.getExistingBids() + "\n");
     }
 
     /**
      * Run the trick-playing phase until all tricks have been played.
      */
     private void showRoundTrickPhase() {
-        while (controller.getTricksLeft() > 0) {
+        while (game.getTricksLeft() > 0) {
             showTrick();
 
             informUser("The trick is over.");
 
-            String winner = controller.getCurrentTrickWinnerName();
+            String winner = game.getCurrentTrickWinnerName();
             ioProvider.writeLine("Winner of this trick: " + winner);
             ioProvider.writeLine("(" + winner + " leads the next trick.)");
             ioProvider.writeLine("");
             getInputString("Press enter to continue");
 
-            controller.evaluateAndAdvanceTrick();
+            game.evaluateAndAdvanceTrick();
         }
+    }
+
+    /**
+     * Wait for the active player to be ready.
+     *
+     * <p>This is used because multiple players share the same screen.
+     * This allows the next player to take their turn privately.
+     */
+    private void getReady() {
+        getInputString("Press enter when " + game.getActivePlayerName() + " is ready.");
+        clearScreen();
+        informUser("It's " + game.getActivePlayerName() + "'s turn.");
     }
 
     /**
@@ -330,21 +366,21 @@ public class PlayGameCLI extends GameCLI {
      */
     private void showTrick() {
 
-        while (!controller.trickIsOver()) {
+        while (!game.isTrickOver()) {
 
             // Make sure the next player is ready
-            int activePlayerIndex = controller.getActivePlayerIndex();
+            int activePlayerIndex = getActivePlayerIndex();
 
             // Check if player is a bot
-            if (controller.isAutonomous(activePlayerIndex)) {
-                controller.proceedAutonomousCardPlay();
+            if (game.isAutonomous(activePlayerIndex)) {
+                game.processAutonomousCardPlay();
                 continue;
             }
 
             getReady();
 
             // Show what's currently on the table (cards played by bots before this turn)
-            HashMap<String, String> trickCards = controller.getCurrentTrickCardsAsStrings();
+            HashMap<String, String> trickCards = game.getCurrentTrickCardsAsStrings();
             if (!trickCards.isEmpty()) {
                 ioProvider.writeLine("Cards on the table (in order of play):");
                 for (java.util.Map.Entry<String, String> entry : trickCards.entrySet()) {
@@ -356,8 +392,8 @@ public class PlayGameCLI extends GameCLI {
             // Show the trump suits for this round.
             // The original trump is always shown. For Abondance, the active trump
             // may differ or not yet be known (chosen by first card play).
-            String originalTrump = controller.getOriginalTrumpSuitName();
-            String activeTrump = controller.getTrumpSuitName();
+            String originalTrump = game.getOriginalTrumpSuitName();
+            String activeTrump = game.getTrumpSuitName();
             if (originalTrump != null) {
                 ioProvider.writeLine("Original trump: " + originalTrump);
             }
@@ -378,7 +414,7 @@ public class PlayGameCLI extends GameCLI {
 
             // Build the set of legally allowed cards
             Set<String> allowedCards = new HashSet<>(
-                    Arrays.asList(controller.getAllowedCardsForCurrentPlayer()));
+                    Arrays.asList(game.getAllowedCardsForCurrentPlayer()));
 
             // Get a valid card choice from the active player
             while (true) {
@@ -386,7 +422,7 @@ public class PlayGameCLI extends GameCLI {
                 try {
 
                     // Build the annotated choices: ★ prefix for legal cards
-                    String[] originalCards = controller.getCards();
+                    String[] originalCards = game.getPlayerCards();
                     String[] choices = new String[originalCards.length + 1];
                     for (int i = 0; i < originalCards.length; i++) {
                         choices[i] = allowedCards.contains(originalCards[i])
@@ -400,7 +436,7 @@ public class PlayGameCLI extends GameCLI {
 
                     if (chosenCard.equals("View Last Trick")) {
                         try {
-                            ioProvider.writeLine(controller.getLastTrickString());
+                            ioProvider.writeLine(game.getLastTrickString());
                         } catch (Exception e) {
                             ioProvider.writeLine("Error viewing last trick: " + e.getMessage());
                         }
@@ -413,7 +449,7 @@ public class PlayGameCLI extends GameCLI {
                     String cardToPlay = chosenCard.startsWith("★ ") ? chosenCard.substring(2) : chosenCard;
 
                     // Register the card play with the controller
-                    controller.registerPlayCard(cardToPlay);
+                    game.processCardPlay(cardToPlay);
 
                     // Stop the loop and pass to the next player
                     break;
@@ -431,6 +467,35 @@ public class PlayGameCLI extends GameCLI {
     }
 
     /**
+     * Display the hand of the active player.
+     */
+    private void showHand() {
+        showHand("Your Hand:", game.getPlayerCards());
+    }
+
+    /**
+     * Displays the hands of the open msierie players.
+     */
+    private void showOpenMiserieHands() {
+        HashMap<String, String[]> cards = game.getOpenMiserieHands();
+        
+        // Print a purposeful notice when the active player is an Open Miserie declarer
+        if ("Open Miserie".equals(game.getFinalBidName())) {
+            for (String declarer : game.getFinalBidDeclarers()) {
+                if (declarer.equals(game.getActivePlayerName())) {
+                    ioProvider.writeLine("(Your own Open Miserie hand is shown below under 'Your Hand'.)\n");
+                    break;
+                }
+            }
+        }
+        
+        if (cards.isEmpty()) return;
+        for (String playerName : cards.keySet()) {
+            showHand(playerName + "'s Hand (Open Miserie):", cards.get(playerName));
+        }
+    }
+
+    /**
      * Display the intermediate scores of every player.
      *
      * <p>This method is intended to show some intermediate score after a round,
@@ -444,10 +509,10 @@ public class PlayGameCLI extends GameCLI {
         informUser("Score earned/lost this round:");
 
         // Retrieve the points for each player from the domain layer
-        HashMap<String, Integer> points = controller.getRoundScoresPerPlayer();
+        HashMap<String, Integer> points = game.getRoundScoresPerPlayer();
 
         // Print the points for each player
-        for (String playerName : controller.getPlayerNames()) {
+        for (String playerName : game.getPlayerNames()) {
             ioProvider.writeLine(playerName + ": " + points.get(playerName) + " points");
         }
 
@@ -458,6 +523,6 @@ public class PlayGameCLI extends GameCLI {
      * Shows the last dealt card, which is always dealt face up and determines the trump for some bids.
      */
     protected void showLastDealtCard() {
-        System.out.println("Last dealt card this round: " + controller.getLastDealtCard() + "\n");
+        System.out.println("Last dealt card this round: " + game.getLastDealtCard() + "\n");
     }
 }

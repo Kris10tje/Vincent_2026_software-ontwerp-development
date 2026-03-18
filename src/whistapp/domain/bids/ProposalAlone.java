@@ -1,6 +1,6 @@
 package whistapp.domain.bids;
 
-import whistapp.domain.players.Player;
+import whistapp.domain.Interfaces.IPlayer;
 
 import java.util.HashMap;
 
@@ -13,7 +13,7 @@ public class ProposalAlone extends Proposal {
     /*                                Constructors                                */
     /* -------------------------------------------------------------------------- */
 
-    public ProposalAlone(Player declarer) {
+    public ProposalAlone(IPlayer declarer) {
         super(Bid.createDeclarersFromPlayer(declarer));
     }
 
@@ -22,7 +22,7 @@ public class ProposalAlone extends Proposal {
     /* -------------------------------------------------------------------------- */
 
     @Override
-    public HashMap<Player, Integer> calculatePoints(HashMap<Player, Integer> tricksWon) {
+    public HashMap<IPlayer, Integer> calculatePoints(HashMap<IPlayer, Integer> tricksWon) {
 
         // Get the single base score value from the helper method in super
         int tricksWonByTeam = getTricksWonByTeam(tricksWon);

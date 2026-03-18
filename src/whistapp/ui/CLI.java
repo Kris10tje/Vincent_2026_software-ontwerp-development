@@ -4,7 +4,7 @@
 
 package whistapp.ui;
 
-import whistapp.application.*;
+import whistapp.domain.Interfaces.IController;
 
 import java.util.Arrays;
 import java.util.Objects;

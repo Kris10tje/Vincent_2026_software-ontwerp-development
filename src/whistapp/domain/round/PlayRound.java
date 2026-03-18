@@ -1,6 +1,8 @@
 package whistapp.domain.round;
 
 import whistapp.domain.Trick;
+import whistapp.domain.Interfaces.IPlayRound;
+import whistapp.domain.Interfaces.IPlayer;
 import whistapp.domain.bids.Abondance;
 import whistapp.domain.bids.BidType;
 import whistapp.domain.cards.Card;
@@ -11,9 +13,9 @@ import whistapp.domain.players.Player;
 
 import java.util.*;
 
-public class PlayRound extends Round {
+public class PlayRound extends Round implements IPlayRound {
 
-    private LinkedHashMap<Player, BidType> bids = new LinkedHashMap<>(); // 4 bids per round
+    private LinkedHashMap<IPlayer, BidType> bids = new LinkedHashMap<>(); // 4 bids per round
     private ArrayList<Trick> tricks = new ArrayList<>();
 
     private Deck deck;
@@ -51,7 +53,7 @@ public class PlayRound extends Round {
      * A player object for keeping track of who's playing.
      * This isn't the same as the dealer.
      */
-    private Player currentBiddingPlayer = null;
+    private IPlayer currentBiddingPlayer = null;
 
     /* -------------------------------------------------------------------------- */
     /*                                Constructors                                */
@@ -136,7 +138,7 @@ public class PlayRound extends Round {
     public boolean hasBeenProposed() {
 
         // 
-        for (Player player : bids.keySet()) {
+        for (IPlayer player : bids.keySet()) {
             if (bids.get(player) == BidType.PROPOSAL) {
                 return true;
             }
@@ -161,7 +163,7 @@ public class PlayRound extends Round {
         if (highestBid == BidType.PASS) {
             // Unless all players are bots, then force one bot to play proposal
             int realPlayerCount = 0;
-            for (Player player : bids.keySet()) {
+            for (IPlayer player : bids.keySet()) {
                 if (!player.isAutonomous()) {
                     realPlayerCount++;
                 }
@@ -182,7 +184,7 @@ public class PlayRound extends Round {
         }
 
         // There was a bid — find the declarers and create the final bid.
-        ArrayList<Player> declarers = determineBidDeclarers(bids, getHighestBid());
+        ArrayList<IPlayer> declarers = determineBidDeclarers(bids, getHighestBid());
         setFinalBid(highestBid, declarers, wasFirstTry);
 
         // Set the active trump suit based on the winning bid:
@@ -247,7 +249,7 @@ public class PlayRound extends Round {
         }
         // It's the start of the round, the starting player is the player after the dealer
         // If the bid is abondance, the starting player is the abondance declarer itself
-        Player startingPlayer = Player.getNextPlayer(getPlayers(), dealer);
+        IPlayer startingPlayer = Player.getNextPlayer(getPlayers(), dealer);
         if (getFinalBid() instanceof Abondance) {
             startingPlayer = finalBid.getBidders().getFirst();
         }
@@ -297,7 +299,7 @@ public class PlayRound extends Round {
     public boolean evaluateAndAdvanceTrick() {
 
         // Determine the trick winner
-        Player winner = getCurrentTrick().determineWinner(getTrumpSuit());
+        IPlayer winner = getCurrentTrick().determineWinner(getTrumpSuit());
 
         // We add a trick won to the winning player
         tricksWon.put(winner, tricksWon.get(winner) + 1);
@@ -316,7 +318,7 @@ public class PlayRound extends Round {
     /**
      * A method for processing the outcome of this round.
      */
-    public HashMap<Player, Integer> processRoundOutcome() {
+    public HashMap<IPlayer, Integer> processRoundOutcome() {
         return super.processRoundOutcome(tricksWon);
     }
 
@@ -336,7 +338,7 @@ public class PlayRound extends Round {
      * Processes the lone proposer to play a proposal alone bid.
      * @param proposer The proposer to register.
      */
-    public void registerLoneProposer(Player proposer) {
+    public void registerLoneProposer(IPlayer proposer) {
         // Save the bid to the map
         bids.put(proposer, BidType.ACCEPT);
         highestBid = BidType.ACCEPT;
@@ -361,7 +363,7 @@ public class PlayRound extends Round {
         abondanceTrumpChosen = false;
 
         // Hand out the cards
-        for (Player player : getPlayers()) {
+        for (IPlayer player : getPlayers()) {
             player.giveHand(deck.dealHand(Round.getTrickCountPerRound()));
         }
 
@@ -373,7 +375,7 @@ public class PlayRound extends Round {
      *
      * @param startingPlayer The starting player for the new trick.
      */
-    private void startNewTrick(Player startingPlayer) {
+    private void startNewTrick(IPlayer startingPlayer) {
         Trick newTrick = new Trick(startingPlayer);
         tricks.add(newTrick);
     }
@@ -439,7 +441,7 @@ public class PlayRound extends Round {
     /**
      * A getter for the cards in this trick.
      */
-    public HashMap<Player, String> getCardsInTrick() {
+    public HashMap<IPlayer, String> getCardsInTrick() {
         return getCurrentTrick().getCardsAsStrings();
     }
 
@@ -447,7 +449,7 @@ public class PlayRound extends Round {
      * A getter for the current bidding player in this round.
      * This player is the person that's supposed to bid next.
      */
-    public Player getCurrentBiddingPlayer() {
+    public IPlayer getCurrentBiddingPlayer() {
         return currentBiddingPlayer;
     }
 
@@ -517,7 +519,7 @@ public class PlayRound extends Round {
     /**
      * A getter for the current player playing in the current trick.
      */
-    public Player getCurrentPlayingPlayer() {
+    public IPlayer getCurrentPlayingPlayer() {
         return getCurrentTrick().getCurrentPlayer();
     }
 
@@ -537,7 +539,7 @@ public class PlayRound extends Round {
      * <p>
      * This method dispatches to the Bid class.
      */
-    public HashMap<Player, String[]> getOpenMiserieHands(Player currentPlayer) {
+    public HashMap<IPlayer, String[]> getOpenMiserieHands(IPlayer currentPlayer) {
         return finalBid.getOpenMiserieHands(currentPlayer);
     }
 
@@ -546,7 +548,7 @@ public class PlayRound extends Round {
      *
      * @return The cards of the previous trick.
      */
-    public LinkedHashMap<Player, String> getCardsFromPreviousTrick() {
+    public LinkedHashMap<IPlayer, String> getCardsFromPreviousTrick() {
         if (tricks.size() <= 1) {
             throw new IllegalStateException("There is no previous trick to show.");
         }
@@ -560,7 +562,7 @@ public class PlayRound extends Round {
      */
     public String getLoneProposerName() {
         if (highestBid == BidType.PROPOSAL) {
-            for (Player p : bids.keySet()) {
+            for (IPlayer p : bids.keySet()) {
                 if (bids.get(p) == BidType.PROPOSAL) {
                     return p.getName();
                 }
@@ -621,7 +623,7 @@ public class PlayRound extends Round {
      */
     public String getExistingBids() {
         StringBuilder str = new StringBuilder("Currently active bids:");
-        for (Player player : bids.keySet()) {
+        for (IPlayer player : bids.keySet()) {
             BidType bid = bids.get(player);
             str.append("\n - ").append(player.getName()).append(": ").append(bid.toString());
         }

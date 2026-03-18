@@ -1,6 +1,6 @@
 package whistapp.domain.bids;
 
-import whistapp.domain.players.Player;
+import whistapp.domain.Interfaces.IPlayer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +16,7 @@ public abstract class Proposal extends Bid {
     /*                                Constructors                                */
     /* -------------------------------------------------------------------------- */
 
-    public Proposal(ArrayList<Player> declarers) throws IllegalArgumentException {
+    public Proposal(ArrayList<IPlayer> declarers) throws IllegalArgumentException {
         super(declarers);
     }
 
@@ -31,11 +31,11 @@ public abstract class Proposal extends Bid {
      * @param tricksWon The number of tricks won by each player.
      * @return The number of tricks won by the declarers.
      */
-    protected int getTricksWonByTeam(HashMap<Player, Integer> tricksWon) {
+    protected int getTricksWonByTeam(HashMap<IPlayer, Integer> tricksWon) {
         int tricksWonByTeam = 0;
 
         // Add up the tricks won by each bidder
-        for (Player bidder : getBidders()) {
+        for (IPlayer bidder : getBidders()) {
             tricksWonByTeam += tricksWon.get(bidder);
         }
 

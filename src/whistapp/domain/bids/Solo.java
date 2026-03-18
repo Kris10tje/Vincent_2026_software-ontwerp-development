@@ -1,8 +1,8 @@
 package whistapp.domain.bids;
 
-import whistapp.domain.players.Player;
-
 import java.util.HashMap;
+
+import whistapp.domain.Interfaces.IPlayer;
 
 public class Solo extends Bid {
 
@@ -10,7 +10,7 @@ public class Solo extends Bid {
     /*                                Constructors                                */
     /* -------------------------------------------------------------------------- */
 
-    public Solo(Player declarer) {
+    public Solo(IPlayer declarer) {
         super(createDeclarersFromPlayer(declarer));
     }
 
@@ -19,7 +19,7 @@ public class Solo extends Bid {
     /* -------------------------------------------------------------------------- */
 
     @Override
-    public HashMap<Player, Integer> calculatePoints(HashMap<Player, Integer> tricksWon) {
+    public HashMap<IPlayer, Integer> calculatePoints(HashMap<IPlayer, Integer> tricksWon) {
         // Determine success
         boolean contractWon = isBidSuccessful(tricksWon);
 
@@ -40,10 +40,10 @@ public class Solo extends Bid {
      * @param tricksWon The number of tricks won per player.
      * @return True if the declarer won all the tricks, False otherwise.
      */
-    protected boolean isBidSuccessful(HashMap<Player, Integer> tricksWon) {
-        Player declarer = getBidders().getFirst();
+    protected boolean isBidSuccessful(HashMap<IPlayer, Integer> tricksWon) {
+        IPlayer declarer = getBidders().getFirst();
 
-        for (Player player : tricksWon.keySet()) {
+        for (IPlayer player : tricksWon.keySet()) {
             // If anyone EXCEPT the declarer won a trick, the Solo has failed.
             if (!player.equals(declarer) && tricksWon.get(player) > 0) {
                 return false;

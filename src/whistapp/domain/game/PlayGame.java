@@ -1,5 +1,6 @@
 package whistapp.domain.game;
 
+import whistapp.domain.Interfaces.*;
 import whistapp.domain.bids.BidType;
 import whistapp.domain.cards.Suit;
 import whistapp.domain.players.BotDifficulty;
@@ -14,11 +15,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class PlayGame extends Game {
-
-    private final ArrayList<PlayRound> rounds = new ArrayList<>(); // Multiple rounds per game
-
-    private PlayRound currentRound;
+public class PlayGame extends Game<IPlayRound> implements IPlayGame {
 
     /* -------------------------------------------------------------------------- */
     /*                              Constructors                                  */
@@ -30,6 +27,7 @@ public class PlayGame extends Game {
     public PlayGame() {
         super();
     }
+ 
 
     /**
      * A constructor for creating a new game of PlayWhist.
@@ -40,27 +38,21 @@ public class PlayGame extends Game {
         initializePlayers(players);
     }
 
+    
+    @Override
+    protected IPlayRound createRound() {
+        return new PlayRound(players);
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                               Public methods                               */
     /* -------------------------------------------------------------------------- */
 
-    @Override
-    public void startNewRound() {
-        // Create a new round
-        PlayRound round = new PlayRound(players);
-
-        // Add the new round to the list of rounds
-        rounds.add(round);
-
-        // Set the current round
-        currentRound = round;
-    }
 
     /**
      * A method starting an autonomous bid in the current round.
      * Dispatches to the PlayRound class.
      */
-    @Override
     public void proceedAutonomousBid() {
         getCurrentRound().proceedAutonomousBid();
     }
@@ -72,7 +64,6 @@ public class PlayGame extends Game {
      *
      * @param bidType The bid to submit.
      */
-    @Override
     public void submitBid(String bidType, Suit newTrumpSuit) {
         getCurrentRound().submitBid(bidFromString(bidType), newTrumpSuit);
     }
@@ -83,7 +74,6 @@ public class PlayGame extends Game {
      * @return True, if a final bid was chosen and the playing can start.
      * False, if everyone passed.
      */
-    @Override
     public boolean evaluateRoundBids() {
         return getCurrentRound().evaluateRoundBids();
     }
@@ -92,7 +82,6 @@ public class PlayGame extends Game {
      * A method for restarting a round where the bidding phase failed.
      * Dispatches to the PlayRound class.
      */
-    @Override
     public void restartFailedRound() {
         getCurrentRound().restartRound();
     }
@@ -101,7 +90,6 @@ public class PlayGame extends Game {
      * A method for starting the playing process of the round.
      * Dispatches to the PlayRound class.
      */
-    @Override
     public void startPlayingRound() {
         getCurrentRound().startPlayingRound();
     }
@@ -112,7 +100,6 @@ public class PlayGame extends Game {
      *
      * @param card The card played.
      */
-    @Override
     public void processCardPlay(String card) {
         getCurrentRound().processCardPlay(card);
     }
@@ -121,7 +108,6 @@ public class PlayGame extends Game {
      * A method for processing an autonomous card play.
      * This fails if the current player requires input.
      */
-    @Override
     public void processAutonomousCardPlay() {
         getCurrentRound().processAutonomousCardPlay();
     }
@@ -134,7 +120,6 @@ public class PlayGame extends Game {
      * @return True, if the final trick was reached.
      * False, otherwise.
      */
-    @Override
     public boolean evaluateAndAdvanceTrick() {
         return getCurrentRound().evaluateAndAdvanceTrick();
     }
@@ -142,17 +127,15 @@ public class PlayGame extends Game {
     /**
      * A method for updating the scores based on the current round.
      */
-    @Override
     public void calculateAndUpdateScores() {
         HashMap<String, Integer> tricksPerPlayerName = new HashMap<>();
-        HashMap<Player, Integer> tricksPerPlayer = getCurrentRound().getTricksWon();
-        for (Player player : tricksPerPlayer.keySet()) {
+        HashMap<IPlayer, Integer> tricksPerPlayer = getCurrentRound().getTricksWon();
+        for (IPlayer player : tricksPerPlayer.keySet()) {
             tricksPerPlayerName.put(player.getName(), tricksPerPlayer.get(player));
         }
         updateScores(tricksPerPlayerName);
     }
 
-    @Override
     public boolean bidRequiresTrumpDeclaration(String chosenBid) {
         return PlayRound.requiresTrumpInput(BidType.fromString(chosenBid));
     }
@@ -161,7 +144,6 @@ public class PlayGame extends Game {
      * Returns a string representation of the last completed trick.
      * Dispatches to getCardsFromPreviousTrick().
      */
-    @Override
     public String getLastTrickString() {
         LinkedHashMap<String, String> trick = getCardsFromPreviousTrick();
         if (trick == null || trick.isEmpty()) {
@@ -221,9 +203,9 @@ public class PlayGame extends Game {
      * A helper method for transforming incoming maps with
      * Player as a key into maps with the player names as keys.
      */
-    private <T> LinkedHashMap<String, T> transformPlayerMapToPlayerNames(HashMap<Player, T> map) {
+    private <T> LinkedHashMap<String, T> transformPlayerMapToPlayerNames(HashMap<IPlayer, T> map) {
         LinkedHashMap<String, T> result = new LinkedHashMap<>();
-        for (HashMap.Entry<Player, T> entry : map.entrySet()) {
+        for (HashMap.Entry<IPlayer, T> entry : map.entrySet()) {
             result.put(entry.getKey().getName(), entry.getValue());
         }
         return result;
@@ -236,7 +218,6 @@ public class PlayGame extends Game {
     /**
      * Finds if the player at the given index is autonomous (a bot).
      */
-    @Override
     public boolean isAutonomous(int playerIndex) {
         String playerName = getPlayerNames().get(playerIndex);
         return getPlayerByName(playerName).isAutonomous();
@@ -245,7 +226,6 @@ public class PlayGame extends Game {
     /**
      * Returns true if the current trick is completely played.
      */
-    @Override
     public boolean isTrickOver() {
         return getCurrentRound().isCurrentTrickOver();
     }
@@ -256,7 +236,6 @@ public class PlayGame extends Game {
      *
      * @return the string
      */
-    @Override
     public String getExistingBids() {
         return getCurrentRound().getExistingBids();
     }
@@ -267,7 +246,6 @@ public class PlayGame extends Game {
      *
      * @return The name of the final round bid.
      */
-    @Override
     public String getFinalBidName() {
         if (getCurrentRound().getFinalBid() == null) {
             return "Pass";
@@ -275,17 +253,15 @@ public class PlayGame extends Game {
         return getCurrentRound().getFinalBid().getClass().getSimpleName();
     }
 
-    @Override
     public String[] getFinalBidDeclarers() {
         if (getCurrentRound().getFinalBid() == null) {
             return new String[0];
         }
         return getCurrentRound().getFinalBid().getBidders().stream()
-                .map(whistapp.domain.players.Player::getName)
+                .map(IPlayer::getName)
                 .toArray(String[]::new);
     }
 
-    @Override
     public String[] getPossibleBidNames() {
         BidType[] possibleBids = getCurrentRound().getPossibleBids();
         String[] bidNames = new String[getCurrentRound().getPossibleBids().length];
@@ -295,36 +271,30 @@ public class PlayGame extends Game {
         return bidNames;
     }
 
-    @Override
     public String getDealerName() {
         return getCurrentRound().getDealer().getName();
     }
 
-    @Override
     public LinkedHashMap<String, String> getCurrentTrickCardsAsStrings() {
         LinkedHashMap<String, String> trickCards = new LinkedHashMap<>();
-        for (Map.Entry<Player, String> entry : getCurrentRound().getCurrentTrick().getCardsAsStrings().entrySet()) {
+        for (Map.Entry<IPlayer, String> entry : getCurrentRound().getCurrentTrick().getCardsAsStrings().entrySet()) {
             trickCards.put(entry.getKey().getName(), entry.getValue());
         }
         return trickCards;
     }
 
-    @Override
     public String[] getAllowedCardsForCurrentPlayer() {
         return getCurrentRound().getAllowedCardsForCurrentPlayer();
     }
 
-    @Override
     public String getTrumpSuitName() {
         return getCurrentRound().getTrumpSuitName();
     }
 
-    @Override
     public String getOriginalTrumpSuitName() {
         return getCurrentRound().getOriginalTrumpSuitName();
     }
 
-    @Override
     public String getCurrentTrickWinnerName() {
         return getCurrentRound().getCurrentTrickWinnerName();
     }
@@ -332,14 +302,13 @@ public class PlayGame extends Game {
     /**
      * A getter finding the round scores for each of the players of the game.
      */
-    @Override
     public HashMap<String, Integer> getRoundScoresPerPlayer() {
         // Create a map for the scores
         HashMap<String, Integer> scoresPerPlayerName = new HashMap<>();
-        HashMap<Player, Integer> scoresPerPlayer = getCurrentRound().processRoundOutcome(getCurrentRound().getTricksWon());
+        HashMap<IPlayer, Integer> scoresPerPlayer = getCurrentRound().processRoundOutcome(getCurrentRound().getTricksWon());
 
         // Add the scores to the map
-        for (Player player : scoresPerPlayer.keySet()) {
+        for (IPlayer player : scoresPerPlayer.keySet()) {
             scoresPerPlayerName.put(player.getName(), scoresPerPlayer.get(player));
         }
 
@@ -348,21 +317,11 @@ public class PlayGame extends Game {
     }
 
     /**
-     * A simple getter for finding the current round in this game.
-     *
-     * @return The current round in this game.
-     */
-    protected PlayRound getCurrentRound() {
-        return currentRound;
-    }
-
-    /**
      * A getter for the active player's name (either bidding or playing)
      * in the current round.
      *
      * @return The name of the active player.
      */
-    @Override
     public String getActivePlayerName() {
         return getCurrentRound().getActivePlayerName();
     }
@@ -372,9 +331,8 @@ public class PlayGame extends Game {
      *
      * @return The cards of the specified player, as a list of Strings.
      */
-    @Override
     public String[] getPlayerCards(String playerName) {
-        Player player = getPlayerByName(playerName);
+        IPlayer player = getPlayerByName(playerName);
         if (player == null) {
             throw new IllegalArgumentException("Player not found: " + playerName);
         }
@@ -382,11 +340,19 @@ public class PlayGame extends Game {
     }
 
     /**
+     * Gets the cards of the currently active player.
+     *
+     * @return An array containing the string representations of every card in the active players hand.
+     */
+    public String[] getPlayerCards() {
+        return getPlayerCards(getActivePlayerName());
+    }
+
+    /**
      * A getter for the trump suit of the current round.
      *
      * @return The trump suit of the current round as a String.
      */
-    @Override
     public Suit getCurrentRoundTrumpSuit() {
         return getCurrentRound().getTrumpSuit();
     }
@@ -396,7 +362,6 @@ public class PlayGame extends Game {
      *
      * @return The last dealt card in the current round as a string
      */
-    @Override
     public String getLastDealtCard() {
         return getCurrentRound().getLastDealtCard().toString();
     }
@@ -418,9 +383,17 @@ public class PlayGame extends Game {
      * @return A map playerName -> cardStrings
      * never containing currentPlayer as playerName
      */
-    @Override
     public HashMap<String, String[]> getOpenMiserieHands(String currentPlayer) {
         return transformPlayerMapToPlayerNames(getCurrentRound().getOpenMiserieHands(getPlayerByName(currentPlayer)));
+    }
+    
+    /**
+     * Gets the hands of the open miserie players.
+     *
+     * @return A map of player names and their hands.
+     */
+    public HashMap<String, String[]> getOpenMiserieHands() {
+        return transformPlayerMapToPlayerNames(getCurrentRound().getOpenMiserieHands(getPlayerByName(getActivePlayerName())));
     }
 
     /**
@@ -437,7 +410,6 @@ public class PlayGame extends Game {
     /**
      * Returns the number of tricks left in this round.
      */
-    @Override
     public int getTricksLeft() {
         return getCurrentRound().getTricksLeft();
     }
@@ -445,7 +417,6 @@ public class PlayGame extends Game {
     /**
      * Returns the highest bid established in this round so far.
      */
-    @Override
     public BidType getHighestBid() {
         return getCurrentRound().getHighestBid();
     }
@@ -454,7 +425,6 @@ public class PlayGame extends Game {
      * Returns the string of the name of the lone proposer.
      * @return the name
      */
-    @Override
     public String getLoneProposerName() {
         return getCurrentRound().getLoneProposerName();
     }
@@ -463,7 +433,6 @@ public class PlayGame extends Game {
      * Processes the lone proposer to play a proposal alone bid.
      * @param proposer The proposer to register.
      */
-    @Override
     public void registerLoneProposer(String proposer) {
         getCurrentRound().registerLoneProposer(getPlayerByName(proposer));
     }

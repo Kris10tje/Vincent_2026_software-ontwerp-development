@@ -1,6 +1,6 @@
 package whistapp.ui.TestClasses;
 
-import whistapp.application.IController;
+import whistapp.domain.Interfaces.IController;
 import whistapp.ui.InputOutputProvider;
 import whistapp.ui.ScoreGameCLI;
 
