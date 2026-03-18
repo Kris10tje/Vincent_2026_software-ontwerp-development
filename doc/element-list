@@ -1,0 +1,9 @@
+whistapp
+whistapp.application
+whistapp.domain
+whistapp.domain.bids
+whistapp.domain.cards
+whistapp.domain.game
+whistapp.domain.players
+whistapp.domain.round
+whistapp.ui
