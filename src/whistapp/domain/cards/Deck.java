@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import whistapp.domain.Interfaces.ICard;
-
 /**
  * Represents a deck of cards in the game of Whist.
  */
@@ -79,11 +77,11 @@ public class Deck {
      * @return A list of cards.
      * @throws IllegalArgumentException if there are not enough cards in the deck.
      */
-    public ArrayList<ICard> dealHand(int numberOfCards) {
+    public ArrayList<Card> dealHand(int numberOfCards) {
         if (numberOfCards > cards.size()) {
             throw new IllegalArgumentException("Not enough cards left to deal this hand.");
         }
-        ArrayList<ICard> hand = new ArrayList<>();
+        ArrayList<Card> hand = new ArrayList<>();
         for (int i = 0; i < numberOfCards; i++) {
             hand.add(dealCard());
         }

@@ -80,7 +80,7 @@ public abstract class Game<TRound extends IRound> implements IGame {
         TRound currentRound = getCurrentRound();
 
         // Get the declarers of the bid
-        ArrayList<IPlayer> declarers = getPlayersByName(declarerNames);
+        ArrayList<Player> declarers = getPlayersByName(declarerNames);
 
         // Set the final bid
         currentRound.setFinalBid(bidType, declarers, wasFirstTry);
@@ -98,17 +98,17 @@ public abstract class Game<TRound extends IRound> implements IGame {
         }
 
         // Find the actual player objects corresponding to the names
-        HashMap<IPlayer, Integer> tricksWon = new HashMap<>();
-        ArrayList<IPlayer> players = getPlayersByName(new ArrayList<>(tricksPerPlayer.keySet()));
-        for (IPlayer player : players) {
+        HashMap<Player, Integer> tricksWon = new HashMap<>();
+        ArrayList<Player> players = getPlayersByName(new ArrayList<>(tricksPerPlayer.keySet()));
+        for (Player player : players) {
             tricksWon.put(player, tricksPerPlayer.get(player.getName()));
         }
 
         // We calculate the score differences
-        HashMap<IPlayer, Integer> deltaPointsPerPlayer = getCurrentRound().processRoundOutcome(tricksWon);
+        HashMap<Player, Integer> deltaPointsPerPlayer = getCurrentRound().processRoundOutcome(tricksWon);
 
         // Update the scores according to the deltas
-        for (IPlayer player : deltaPointsPerPlayer.keySet()) {
+        for (Player player : deltaPointsPerPlayer.keySet()) {
             player.updateScore(deltaPointsPerPlayer.get(player));
         }
     }
@@ -220,7 +220,7 @@ public abstract class Game<TRound extends IRound> implements IGame {
      * A simple getter finding the player with the given name.
      * Returns null if there is no such player.
      */
-    public IPlayer getPlayerByName(String name) {
+    public Player getPlayerByName(String name) {
 
         // Find the player with the given name
         for (Player player : getPlayers()) {
@@ -238,9 +238,9 @@ public abstract class Game<TRound extends IRound> implements IGame {
      * A simple getter finding multiple players with given names.
      * Can have null values if there exists no player with that name.
      */
-    protected ArrayList<IPlayer> getPlayersByName(ArrayList<String> playerNames) {
+    protected ArrayList<Player> getPlayersByName(ArrayList<String> playerNames) {
         // Create a list for the players
-        ArrayList<IPlayer> players = new ArrayList<>();
+        ArrayList<Player> players = new ArrayList<>();
 
         // Add the players to the list
         for (String playerName : playerNames) {

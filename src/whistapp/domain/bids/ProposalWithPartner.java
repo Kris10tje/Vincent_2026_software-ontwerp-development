@@ -1,9 +1,9 @@
 package whistapp.domain.bids;
 
-import whistapp.domain.Interfaces.IPlayer;
-
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import whistapp.domain.players.Player;
 
 /**
  * Represents a proposal to play with a partner in the game of Whist.
@@ -14,7 +14,7 @@ public class ProposalWithPartner extends Proposal {
     /*                                Constructors                                */
     /* -------------------------------------------------------------------------- */
 
-    public ProposalWithPartner(ArrayList<IPlayer> declarers) throws IllegalArgumentException {
+    public ProposalWithPartner(ArrayList<Player> declarers) throws IllegalArgumentException {
         super(declarers);
         if (!isRightAmountOfDeclarers(declarers, 2))
             throw new IllegalArgumentException("Invalid amount of declarers.");
@@ -25,7 +25,7 @@ public class ProposalWithPartner extends Proposal {
     /* -------------------------------------------------------------------------- */
 
     @Override
-    public HashMap<IPlayer, Integer> calculatePoints(HashMap<IPlayer, Integer> tricksWon)
+    public HashMap<Player, Integer> calculatePoints(HashMap<Player, Integer> tricksWon)
             throws IllegalArgumentException {
 
         // Get the base score from the helper method in super

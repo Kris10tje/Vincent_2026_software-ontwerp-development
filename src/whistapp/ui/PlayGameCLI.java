@@ -331,7 +331,7 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
         while (!game.isTrickOver()) {
 
             // Make sure the next player is ready
-            int activePlayerIndex = getActivePlayerIndex();
+            int activePlayerIndex = game.getActivePlayerIndex();
 
             // Check if player is a bot
             if (game.isAutonomous(activePlayerIndex)) {

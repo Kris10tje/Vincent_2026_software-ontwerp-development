@@ -1,10 +1,9 @@
 package whistapp.domain.bids;
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import whistapp.domain.Interfaces.IPlayer;
+import whistapp.domain.players.Player;
 
 /**
  * Represents a Miserie bid (0 cards)
@@ -15,7 +14,7 @@ public class Miserie extends Bid {
     /*                                Constructors                                */
     /* -------------------------------------------------------------------------- */
 
-    public Miserie(ArrayList<IPlayer> declarers) throws IllegalArgumentException {
+    public Miserie(ArrayList<Player> declarers) throws IllegalArgumentException {
         super(declarers);
     }
 
@@ -29,20 +28,20 @@ public class Miserie extends Bid {
     }
 
     @Override
-    public HashMap<IPlayer, Integer> calculatePoints(HashMap<IPlayer, Integer> tricksWon) {
+    public HashMap<Player, Integer> calculatePoints(HashMap<Player, Integer> tricksWon) {
         // Note again that we don't check the arguments as this is the responsibility
         // of the information experts for the number of players (Game) and the number of tricks (Round).
 
         // Initialize the scores map to 0
-        HashMap<IPlayer, Integer> scores = new HashMap<>();
-        for (IPlayer player : tricksWon.keySet()) {
+        HashMap<Player, Integer> scores = new HashMap<>();
+        for (Player player : tricksWon.keySet()) {
             scores.put(player, 0);
         }
 
         int baseValue = getBaseValue();
 
         // Accumulate points for EVERY player who bid Miserie. Each bid is handled individually.
-        for (IPlayer declarer : getBidders()) {
+        for (Player declarer : getBidders()) {
             boolean contractWon = isBidSuccessful(tricksWon, declarer);
 
             // Amount the declarer should win or lose
@@ -50,7 +49,7 @@ public class Miserie extends Bid {
             // Amount the opponents should win or lose
             int opponentDelta = contractWon ? -baseValue : baseValue;
 
-            for (IPlayer player : scores.keySet()) {
+            for (Player player : scores.keySet()) {
                 int currentScore = scores.get(player);
                 if (player.equals(declarer)) {
                     scores.put(player, currentScore + declareDelta);
@@ -74,7 +73,7 @@ public class Miserie extends Bid {
      * @param player    The player to check the win condition for.
      * @return True if the player won, False otherwise.
      */
-    protected boolean isBidSuccessful(HashMap<IPlayer, Integer> tricksWon, IPlayer player) {
+    protected boolean isBidSuccessful(HashMap<Player, Integer> tricksWon, Player player) {
         // In Miserie, the contract is successful if the declarer doesn't win any tricks.
         return tricksWon.get(player) == 0;
     }

@@ -6,11 +6,12 @@ import java.util.LinkedHashMap;
 
 import whistapp.domain.bids.Bid;
 import whistapp.domain.bids.BidType;
+import whistapp.domain.players.Player;
 
 public interface IRound {
-    void setFinalBid(BidType bidType, ArrayList<IPlayer> declarers, boolean wasFirstTry);
-    HashMap<IPlayer, Integer> processRoundOutcome(HashMap<IPlayer, Integer> tricksWon);
+    void setFinalBid(BidType bidType, ArrayList<Player> declarers, boolean wasFirstTry);
+    HashMap<Player, Integer> processRoundOutcome(HashMap<Player, Integer> tricksWon);
     void setWasFirstTry(boolean wasFirstTry);
-    LinkedHashMap<IPlayer, Integer> getTricksWon();
+    LinkedHashMap<Player, Integer> getTricksWon();
     Bid getFinalBid();
 }

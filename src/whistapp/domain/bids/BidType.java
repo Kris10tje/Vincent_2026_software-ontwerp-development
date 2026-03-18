@@ -1,8 +1,7 @@
 package whistapp.domain.bids;
-
-import whistapp.domain.Interfaces.IPlayer;
-
 import java.util.ArrayList;
+
+import whistapp.domain.players.Player;
 
 /**
  * Enum for the different types of bids during the bidding phase of the game.
@@ -81,7 +80,7 @@ public enum BidType {
      * @param declarers The declarers for this bid.
      * @return A Bid object corresponding to the BidType.
      */
-    public Bid createBidFromBidType(ArrayList<IPlayer> declarers) {
+    public Bid createBidFromBidType(ArrayList<Player> declarers) {
         return switch (this) {
             case PASS -> null;
             case PROPOSAL -> new ProposalAlone(declarers.getFirst());

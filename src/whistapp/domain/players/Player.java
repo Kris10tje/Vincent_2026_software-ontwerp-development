@@ -2,9 +2,8 @@ package whistapp.domain.players;
 
 import java.util.HashSet;
 
-import whistapp.domain.Interfaces.ICard;
-import whistapp.domain.Interfaces.IPlayer;
 import whistapp.domain.bids.BidType;
+import whistapp.domain.cards.Card;
 import whistapp.domain.cards.Hand;
 import whistapp.domain.cards.Suit;
 
@@ -13,7 +12,7 @@ import java.util.ArrayList;
 /**
  * Represents a player in the game of Whist.
  */
-public class Player implements IPlayer {
+public class Player {
 
     private String name;
     private int score = 0;
@@ -51,7 +50,7 @@ public class Player implements IPlayer {
     /**
      * A method for receiving a hand, a list of 13 cards.
      */
-    public void giveHand(ArrayList<ICard> hand) {
+    public void giveHand(ArrayList<Card> hand) {
         this.hand = new Hand(hand);
     }
 
@@ -61,7 +60,7 @@ public class Player implements IPlayer {
      * @throws IllegalArgumentException The given card isn't found in this hand.
      * @throws IllegalStateException    The hand is empty.
      */
-    public ICard playCard(String card, Suit currentSuit) throws IllegalArgumentException, IllegalStateException {
+    public Card playCard(String card, Suit currentSuit) throws IllegalArgumentException, IllegalStateException {
         if (hand == null || hand.isEmpty()) {
             throw new IllegalStateException("Hand is empty, can't play a card.");
         }
@@ -78,7 +77,7 @@ public class Player implements IPlayer {
      * @param currentPlayer The player that is currently playing.
      * @return The player playing after the current player.
      */
-    public static IPlayer getNextPlayer(ArrayList<IPlayer> players, IPlayer currentPlayer) {
+    public static Player getNextPlayer(ArrayList<Player> players, Player currentPlayer) {
         if (currentPlayer == null || !players.contains(currentPlayer)) {
             throw new IllegalStateException("Can't advance player when there is no current player.");
         }

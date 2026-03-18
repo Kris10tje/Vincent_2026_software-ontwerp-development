@@ -1,6 +1,5 @@
 package whistapp.domain.round;
 
-import whistapp.domain.Interfaces.IPlayer;
 import whistapp.domain.Interfaces.IScoreRound;
 import whistapp.domain.bids.BidType;
 import whistapp.domain.players.Player;
@@ -29,7 +28,7 @@ public class ScoreRound extends Round implements IScoreRound {
      * @param bids A map of player to their respective final bid.
      * @throws IllegalArgumentException If everyone passed.
      */
-    public void registerBids(LinkedHashMap<IPlayer, BidType> bids) throws IllegalArgumentException {
+    public void registerBids(LinkedHashMap<Player, BidType> bids) throws IllegalArgumentException {
         // Find the highest bid
         BidType highestBid = getHighestBid(bids);
 
@@ -38,7 +37,7 @@ public class ScoreRound extends Round implements IScoreRound {
         }
 
         // Determine declarers
-        ArrayList<IPlayer> declarers = determineBidDeclarers(bids, highestBid);
+        ArrayList<Player> declarers = determineBidDeclarers(bids, highestBid);
 
         // Set the final bid
         setFinalBid(highestBid, declarers, true);

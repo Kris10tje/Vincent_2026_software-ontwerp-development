@@ -1,6 +1,6 @@
 package whistapp.domain.bids;
 
-import whistapp.domain.Interfaces.IPlayer;
+import whistapp.domain.players.Player;
 
 public class SoloSlim extends Solo {
 
@@ -8,7 +8,7 @@ public class SoloSlim extends Solo {
     /*                                Constructors                                */
     /* -------------------------------------------------------------------------- */
 
-    public SoloSlim(IPlayer declarer) {
+    public SoloSlim(Player declarer) {
         super(declarer);
     }
 

@@ -1,8 +1,8 @@
 package whistapp.domain.bids;
 
-import whistapp.domain.Interfaces.IPlayer;
-
 import java.util.HashMap;
+
+import whistapp.domain.players.Player;
 
 /**
  * Represents a proposal to play alone in the game of Whist.
@@ -13,7 +13,7 @@ public class ProposalAlone extends Proposal {
     /*                                Constructors                                */
     /* -------------------------------------------------------------------------- */
 
-    public ProposalAlone(IPlayer declarer) {
+    public ProposalAlone(Player declarer) {
         super(Bid.createDeclarersFromPlayer(declarer));
     }
 
@@ -22,7 +22,7 @@ public class ProposalAlone extends Proposal {
     /* -------------------------------------------------------------------------- */
 
     @Override
-    public HashMap<IPlayer, Integer> calculatePoints(HashMap<IPlayer, Integer> tricksWon) {
+    public HashMap<Player, Integer> calculatePoints(HashMap<Player, Integer> tricksWon) {
 
         // Get the single base score value from the helper method in super
         int tricksWonByTeam = getTricksWonByTeam(tricksWon);

@@ -1,10 +1,10 @@
 package whistapp.domain.bids;
 
-import whistapp.domain.Interfaces.IPlayer;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import whistapp.domain.players.Player;
 
 import static java.util.Arrays.asList;
 
@@ -13,7 +13,7 @@ import static java.util.Arrays.asList;
  */
 public abstract class Bid {
 
-    protected ArrayList<IPlayer> declarers;
+    protected ArrayList<Player> declarers;
 
     /* -------------------------------------------------------------------------- */
     /*                                Constructors                                */
@@ -27,7 +27,7 @@ public abstract class Bid {
      * @throws IllegalArgumentException Throws when the declarer list is empty.
      *                                  Throws when the declarer list has repeated declarers.
      */
-    public Bid(ArrayList<IPlayer> declarers) throws IllegalArgumentException {
+    public Bid(ArrayList<Player> declarers) throws IllegalArgumentException {
 
         // Bids cannot be empty.
         // Because the round orchestrates the bidding phase, it is physically impossible
@@ -38,7 +38,7 @@ public abstract class Bid {
         }
 
         // Bids cannot have repeated declarers
-        for (IPlayer p : declarers) {
+        for (Player p : declarers) {
             if (declarers.indexOf(p) != declarers.lastIndexOf(p))
                 throw new IllegalArgumentException("Repeated declarers.");
         }
@@ -68,14 +68,14 @@ public abstract class Bid {
      * number of players, or the sum of tricks won being 13) are not checked here; that is the
      * responsibility of the information experts for players (Game) and tricks (Round).
      */
-    public abstract HashMap<IPlayer, Integer> calculatePoints(HashMap<IPlayer, Integer> tricksWon);
+    public abstract HashMap<Player, Integer> calculatePoints(HashMap<Player, Integer> tricksWon);
 
     /**
      * Simple checker for if a given player is a declarer of this bid
      * @param player the player to check for
      * @return {@code true} if that player is a declarer of this bid, {@code false} otherwise
      */
-    public boolean isDeclarer(IPlayer player) {
+    public boolean isDeclarer(Player player) {
         return this.declarers.contains(player);
     }
 
@@ -87,7 +87,7 @@ public abstract class Bid {
      * Simple getter to retrieve the declarers of this bid.
      * @return a list containing all players that declared this bid
      */
-    public List<IPlayer> getBidders() {
+    public List<Player> getBidders() {
         return this.declarers;
     }
 
@@ -100,7 +100,7 @@ public abstract class Bid {
      * This map is empty if the bid isn't open miserie,
      * or if the other players haven't bid open miserie.
      */
-    public HashMap<IPlayer, String[]> getOpenMiserieHands(IPlayer currentPlayer) {
+    public HashMap<Player, String[]> getOpenMiserieHands(Player currentPlayer) {
         return new HashMap<>();
     }
 
@@ -117,7 +117,7 @@ public abstract class Bid {
      * @return True if the number of declarers matches the given amount,
      * False otherwise.
      */
-    protected boolean isRightAmountOfDeclarers(ArrayList<IPlayer> declarers, int amountOfDeclarers) {
+    protected boolean isRightAmountOfDeclarers(ArrayList<Player> declarers, int amountOfDeclarers) {
         return declarers.size() == amountOfDeclarers;
     }
 
@@ -130,7 +130,7 @@ public abstract class Bid {
      * @param declarer The Player to be added to the ArrayList.
      * @return An ArrayList containing the given Player.
      */
-    protected static ArrayList<IPlayer> createDeclarersFromPlayer(IPlayer declarer) {
+    protected static ArrayList<Player> createDeclarersFromPlayer(Player declarer) {
         return new ArrayList<>(asList(declarer));
     }
 
@@ -145,14 +145,14 @@ public abstract class Bid {
      * @param nonDeclarerScore The score for the players that didn't declare for this bid.
      * @return The final scores for each of the players.
      */
-    protected HashMap<IPlayer, Integer> generateScores(HashMap<IPlayer, Integer> tricksWon,
+    protected HashMap<Player, Integer> generateScores(HashMap<Player, Integer> tricksWon,
                                                       int declarerScore, int nonDeclarerScore) {
 
         // Keep track of the scores per player
-        HashMap<IPlayer, Integer> scores = new HashMap<>();
+        HashMap<Player, Integer> scores = new HashMap<>();
 
         // Calculate the scores
-        for (IPlayer p : tricksWon.keySet()) {
+        for (Player p : tricksWon.keySet()) {
             scores.put(p, isDeclarer(p) ? declarerScore : nonDeclarerScore);
         }
 

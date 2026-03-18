@@ -75,7 +75,7 @@ public class ScoreGame extends Game<IScoreRound> implements IScoreGame {
      * @param bids The map of player names to bids.
      */
     public void registerBids(HashMap<String, String> bids) {
-        LinkedHashMap<IPlayer, BidType> playerBids = new LinkedHashMap<>();
+        LinkedHashMap<Player, BidType> playerBids = new LinkedHashMap<>();
 
         // Ensure we preserve the order of players by iterating over Game's players list
         for (Player player : getPlayers()) {

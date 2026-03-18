@@ -1,6 +1,5 @@
 package whistapp.domain.cards;
 
-import whistapp.domain.Interfaces.ICard;
 import whistapp.domain.round.Round;
 
 import java.util.ArrayList;
@@ -13,7 +12,7 @@ public class Hand {
     /**
      * The list of cards in this hand.
      */
-    private ArrayList<ICard> cards = new ArrayList<>();
+    private ArrayList<Card> cards = new ArrayList<>();
 
     /* -------------------------------------------------------------------------- */
     /*                                Constructors                                */
@@ -25,7 +24,7 @@ public class Hand {
      * @param cards The starting cards of this player.
      * @throws IllegalArgumentException The given cards are of invalid length.
      */
-    public Hand(ArrayList<ICard> cards) throws IllegalArgumentException {
+    public Hand(ArrayList<Card> cards) throws IllegalArgumentException {
         if (cards == null || cards.size() > Round.NUMBER_OF_TRICKS) {
             // The number of cards can't be higher than the number of tricks
             throw new IllegalArgumentException("Invalid cards.");
@@ -44,8 +43,8 @@ public class Hand {
      * @return The corresponding card in the hand.
      * @throws IllegalArgumentException The given card isn't found in this hand.
      */
-    public ICard playCard(String card) throws IllegalArgumentException {
-        ICard playedCard = getCardFromString(card);
+    public Card playCard(String card) throws IllegalArgumentException {
+        Card playedCard = getCardFromString(card);
         cards.remove(playedCard); // We also remove this card from this hand
         return playedCard;
     }
@@ -75,7 +74,7 @@ public class Hand {
         // First we sort the cards.
         Card.sortCards(cards);
         ArrayList<String> handCards = new ArrayList<>();
-        for (ICard card : cards) {
+        for (Card card : cards) {
             handCards.add(card.toString());
         }
         return handCards;
@@ -88,19 +87,19 @@ public class Hand {
      * @param currentSuit The current suit of the trick.
      * @return A list of all the allowed cards.
      */
-    private ArrayList<ICard> getAllowedCards(Suit currentSuit) {
+    private ArrayList<Card> getAllowedCards(Suit currentSuit) {
         // If there is no current suit, any card can be played.
         if (currentSuit == null) {
-            ArrayList<ICard> allowedCards = new ArrayList<>(cards);
+            ArrayList<Card> allowedCards = new ArrayList<>(cards);
             Card.sortCards(allowedCards);
             return allowedCards;
         }
 
         // First we check if we have any cards of the current suit.
-        ArrayList<ICard> allowedCards = new ArrayList<>();
+        ArrayList<Card> allowedCards = new ArrayList<>();
         if (hasSuit(currentSuit)) {
             // If it does have this suit, we can only play cards of that suit.
-            for (ICard card : cards) {
+            for (Card card : cards) {
                 if (card.getSuit().equals(currentSuit)) {
                     allowedCards.add(card);
                 }
@@ -131,13 +130,13 @@ public class Hand {
         }
 
         // Get the list of all legally allowed cards for this turn
-        ArrayList<ICard> allowedCards = getAllowedCards(suit);
+        ArrayList<Card> allowedCards = getAllowedCards(suit);
 
         // We keep track of an outer card within the legal bounds
-        ICard outerCard = allowedCards.getFirst();
+        Card outerCard = allowedCards.getFirst();
         int outerValue = outerCard.getValue().getNumericValue();
 
-        for (ICard card : allowedCards) {
+        for (Card card : allowedCards) {
             // This is the value of the current card
             int value = card.getValue().getNumericValue();
 
@@ -159,9 +158,9 @@ public class Hand {
      */
     public ArrayList<String> getAllowedHandCards(Suit currentSuit) {
         // We only return the allowed cards
-        ArrayList<ICard> allowedCards = getAllowedCards(currentSuit);
+        ArrayList<Card> allowedCards = getAllowedCards(currentSuit);
         // We map all cards to their string variant.
-        return new ArrayList<>(allowedCards.stream().map(ICard::toString).toList());
+        return new ArrayList<>(allowedCards.stream().map(Card::toString).toList());
     }
 
     /**
@@ -169,7 +168,7 @@ public class Hand {
      */
     public boolean hasSuit(Suit suit) {
         if (suit == null) return false;
-        for (ICard card : cards) {
+        for (Card card : cards) {
             if (card.getSuit().equals(suit)) {
                 return true;
             }
@@ -190,8 +189,8 @@ public class Hand {
      *
      * @throws IllegalArgumentException The given card isn't found in this hand.
      */
-    private ICard getCardFromString(String card) throws IllegalArgumentException {
-        for (ICard c : cards) {
+    private Card getCardFromString(String card) throws IllegalArgumentException {
+        for (Card c : cards) {
             if (c.isSameCard(card)) {
                 return c;
             }

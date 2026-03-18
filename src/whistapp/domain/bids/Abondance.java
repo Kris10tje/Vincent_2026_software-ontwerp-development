@@ -1,8 +1,8 @@
 package whistapp.domain.bids;
 
-import whistapp.domain.Interfaces.IPlayer;
-
 import java.util.HashMap;
+
+import whistapp.domain.players.Player;
 
 /**
  * Represents an Abondance bid (9, 10, 11, or 12 cards)
@@ -23,7 +23,7 @@ public class Abondance extends Bid {
      * @param numberOfCards The number of cards this declarer will win.
      * @param originalTrump Whether this Abondance bid enforces the original trump.
      */
-    public Abondance(IPlayer declarer, int numberOfCards, boolean originalTrump) {
+    public Abondance(Player declarer, int numberOfCards, boolean originalTrump) {
 
         // Super constructor
         super(createDeclarersFromPlayer(declarer));
@@ -39,7 +39,7 @@ public class Abondance extends Bid {
     /* -------------------------------------------------------------------------- */
 
     @Override
-    public HashMap<IPlayer, Integer> calculatePoints(HashMap<IPlayer, Integer> tricksWon) throws IllegalStateException {
+    public HashMap<Player, Integer> calculatePoints(HashMap<Player, Integer> tricksWon) throws IllegalStateException {
         // Note again that we don't check the arguments as this is the responsibility
         // of the information experts for the number of players (Game) and the number of tricks (Round).
 
@@ -87,7 +87,7 @@ public class Abondance extends Bid {
      * @param player    The player to check the win condition for.
      * @return True if the player won, False otherwise.
      */
-    protected boolean isBidSuccessful(HashMap<IPlayer, Integer> tricksWon, IPlayer player) {
+    protected boolean isBidSuccessful(HashMap<Player, Integer> tricksWon, Player player) {
         return tricksWon.get(player) >= numberOfCards;
     }
 

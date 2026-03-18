@@ -129,8 +129,8 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      */
     public void calculateAndUpdateScores() {
         HashMap<String, Integer> tricksPerPlayerName = new HashMap<>();
-        HashMap<IPlayer, Integer> tricksPerPlayer = getCurrentRound().getTricksWon();
-        for (IPlayer player : tricksPerPlayer.keySet()) {
+        HashMap<Player, Integer> tricksPerPlayer = getCurrentRound().getTricksWon();
+        for (Player player : tricksPerPlayer.keySet()) {
             tricksPerPlayerName.put(player.getName(), tricksPerPlayer.get(player));
         }
         updateScores(tricksPerPlayerName);
@@ -203,9 +203,9 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      * A helper method for transforming incoming maps with
      * Player as a key into maps with the player names as keys.
      */
-    private <T> LinkedHashMap<String, T> transformPlayerMapToPlayerNames(HashMap<IPlayer, T> map) {
+    private <T> LinkedHashMap<String, T> transformPlayerMapToPlayerNames(HashMap<Player, T> map) {
         LinkedHashMap<String, T> result = new LinkedHashMap<>();
-        for (HashMap.Entry<IPlayer, T> entry : map.entrySet()) {
+        for (HashMap.Entry<Player, T> entry : map.entrySet()) {
             result.put(entry.getKey().getName(), entry.getValue());
         }
         return result;
@@ -258,7 +258,7 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
             return new String[0];
         }
         return getCurrentRound().getFinalBid().getBidders().stream()
-                .map(IPlayer::getName)
+                .map(Player::getName)
                 .toArray(String[]::new);
     }
 
@@ -277,7 +277,7 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
 
     public LinkedHashMap<String, String> getCurrentTrickCardsAsStrings() {
         LinkedHashMap<String, String> trickCards = new LinkedHashMap<>();
-        for (Map.Entry<IPlayer, String> entry : getCurrentRound().getCurrentTrick().getCardsAsStrings().entrySet()) {
+        for (Map.Entry<Player, String> entry : getCurrentRound().getCurrentTrick().getCardsAsStrings().entrySet()) {
             trickCards.put(entry.getKey().getName(), entry.getValue());
         }
         return trickCards;
@@ -305,10 +305,10 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
     public HashMap<String, Integer> getRoundScoresPerPlayer() {
         // Create a map for the scores
         HashMap<String, Integer> scoresPerPlayerName = new HashMap<>();
-        HashMap<IPlayer, Integer> scoresPerPlayer = getCurrentRound().processRoundOutcome(getCurrentRound().getTricksWon());
+        HashMap<Player, Integer> scoresPerPlayer = getCurrentRound().processRoundOutcome(getCurrentRound().getTricksWon());
 
         // Add the scores to the map
-        for (IPlayer player : scoresPerPlayer.keySet()) {
+        for (Player player : scoresPerPlayer.keySet()) {
             scoresPerPlayerName.put(player.getName(), scoresPerPlayer.get(player));
         }
 
@@ -332,7 +332,7 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      * @return The cards of the specified player, as a list of Strings.
      */
     public String[] getPlayerCards(String playerName) {
-        IPlayer player = getPlayerByName(playerName);
+        Player player = getPlayerByName(playerName);
         if (player == null) {
             throw new IllegalArgumentException("Player not found: " + playerName);
         }
