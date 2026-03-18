@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html","k":"18"},{"l":"whistapp"},{"l":"whistapp.application"},{"l":"whistapp.domain"},{"l":"whistapp.domain.bids"},{"l":"whistapp.domain.cards"},{"l":"whistapp.domain.game"},{"l":"whistapp.domain.players"},{"l":"whistapp.domain.round"},{"l":"whistapp.ui"}];updateSearchResults();
