@@ -1,6 +1,6 @@
 package whistapp.ui;
 
-import whistapp.application.Controller;
+import whistapp.application.*;
 
 import java.util.*;
 
@@ -18,8 +18,8 @@ public class PlayGameCLI extends GameCLI {
      *
      * @param controller the application controller used to manage the game
      */
-    public PlayGameCLI(Controller controller) {
-        super(controller);
+    public PlayGameCLI(IController controller, InputOutputProvider ioProvider) {
+        super(controller, ioProvider);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -42,7 +42,7 @@ public class PlayGameCLI extends GameCLI {
      */
     protected void showIntro() {
         clearScreen();
-        System.out.println("Playing a virtual game of Whist.");
+        ioProvider.writeLine("Playing a virtual game of Whist.");
     }
 
     /**
@@ -65,7 +65,7 @@ public class PlayGameCLI extends GameCLI {
             if (nbOfRealPlayers <= Controller.getPlayerCount() && nbOfRealPlayers >= 0) {
                 break;
             } else {
-                System.out.println("Invalid number of real players.");
+                ioProvider.writeLine("Invalid number of real players.");
             }
         }
 
@@ -108,7 +108,7 @@ public class PlayGameCLI extends GameCLI {
                 }
 
                 if (playerMap.size() != Controller.getPlayerCount()) {
-                    System.out.println("Error: Invalid player names.\nTry again.");
+                    ioProvider.writeLine("Error: Invalid player names.\nTry again.");
                     continue;
                 }
 
@@ -118,16 +118,16 @@ public class PlayGameCLI extends GameCLI {
                 } catch (Exception e) {
 
                     clearScreen();
-                    System.out.println("Error: " + e.getMessage() + "\nTry again.");
+                    ioProvider.writeLine("Error: " + e.getMessage() + "\nTry again.");
 
                     continue;
                 }
 
                 // Confirmation message
                 clearScreen();
-                System.out.println("Players registered:\n");
+                ioProvider.writeLine("Players registered:\n");
                 for (String key : playerMap.keySet()) {
-                    System.out.println("- " + key);
+                    ioProvider.writeLine("- " + key);
                 }
 
                 break;
@@ -198,9 +198,9 @@ public class PlayGameCLI extends GameCLI {
         // Feedback
         clearScreen();
         printSeparator();
-        System.out.println("THE BIDDING PHASE HAS ENDED.");
-        System.out.println("Winning bid: " + controller.getFinalBidName());
-        System.out.println("Declarer(s): " + String.join(", ", controller.getFinalBidDeclarers()));
+        ioProvider.writeLine("THE BIDDING PHASE HAS ENDED.");
+        ioProvider.writeLine("Winning bid: " + controller.getFinalBidName());
+        ioProvider.writeLine("Declarer(s): " + String.join(", ", controller.getFinalBidDeclarers()));
         printSeparator();
 
         // We wait for user before starting the tricks
@@ -267,7 +267,7 @@ public class PlayGameCLI extends GameCLI {
 
                     } catch (Exception e) {
                         clearScreen();
-                        System.out.println("Error: " + e.getMessage() + "\nPlease try again.");
+                        ioProvider.writeLine("Error: " + e.getMessage() + "\nPlease try again.");
                     }
 
                 }
@@ -299,7 +299,7 @@ public class PlayGameCLI extends GameCLI {
      * Show all existing bids made by players
      */
     private void showExistingBids() {
-        System.out.println(controller.getExistingBids() + "\n");
+        ioProvider.writeLine(controller.getExistingBids() + "\n");
     }
 
     /**
@@ -312,9 +312,9 @@ public class PlayGameCLI extends GameCLI {
             informUser("The trick is over.");
 
             String winner = controller.getCurrentTrickWinnerName();
-            System.out.println("Winner of this trick: " + winner);
-            System.out.println("(" + winner + " leads the next trick.)");
-            System.out.println();
+            ioProvider.writeLine("Winner of this trick: " + winner);
+            ioProvider.writeLine("(" + winner + " leads the next trick.)");
+            ioProvider.writeLine("");
             getInputString("Press enter to continue");
 
             controller.evaluateAndAdvanceTrick();
@@ -346,11 +346,11 @@ public class PlayGameCLI extends GameCLI {
             // Show what's currently on the table (cards played by bots before this turn)
             HashMap<String, String> trickCards = controller.getCurrentTrickCardsAsStrings();
             if (!trickCards.isEmpty()) {
-                System.out.println("Cards on the table (in order of play):");
+                ioProvider.writeLine("Cards on the table (in order of play):");
                 for (java.util.Map.Entry<String, String> entry : trickCards.entrySet()) {
-                    System.out.println("  " + entry.getKey() + ": " + entry.getValue());
+                    ioProvider.writeLine("  " + entry.getKey() + ": " + entry.getValue());
                 }
-                System.out.println();
+                ioProvider.writeLine("");
             }
 
             // Show the trump suits for this round.
@@ -359,16 +359,16 @@ public class PlayGameCLI extends GameCLI {
             String originalTrump = controller.getOriginalTrumpSuitName();
             String activeTrump = controller.getTrumpSuitName();
             if (originalTrump != null) {
-                System.out.println("Original trump: " + originalTrump);
+                ioProvider.writeLine("Original trump: " + originalTrump);
             }
             if (activeTrump == null) {
                 // This is a bid that doesn't have a trump (e.g. Miserie)
-                System.out.println("Active trump:   None");
+                ioProvider.writeLine("Active trump:   None");
             } else if (!activeTrump.equals(originalTrump)) {
-                System.out.println("Active trump:   " + activeTrump + " (chosen by bid declarer)");
+                ioProvider.writeLine("Active trump:   " + activeTrump + " (chosen by bid declarer)");
             }
             // If active trump equals original trump, no extra line is needed.
-            System.out.println();
+            ioProvider.writeLine("");
 
             // Show the hands of the open miserie players
             showOpenMiserieHands();
@@ -400,9 +400,9 @@ public class PlayGameCLI extends GameCLI {
 
                     if (chosenCard.equals("View Last Trick")) {
                         try {
-                            System.out.println(controller.getLastTrickString());
+                            ioProvider.writeLine(controller.getLastTrickString());
                         } catch (Exception e) {
-                            System.out.println("Error viewing last trick: " + e.getMessage());
+                            ioProvider.writeLine("Error viewing last trick: " + e.getMessage());
                         }
                         getInputString("Press enter to return.");
                         clearScreen();
@@ -420,7 +420,7 @@ public class PlayGameCLI extends GameCLI {
 
                 } catch (Exception e) {
                     clearScreen();
-                    System.out.println("Error: " + e.getMessage() + "\nPlease try again.");
+                    ioProvider.writeLine("Error: " + e.getMessage() + "\nPlease try again.");
                 }
             }
 
@@ -448,7 +448,7 @@ public class PlayGameCLI extends GameCLI {
 
         // Print the points for each player
         for (String playerName : controller.getPlayerNames()) {
-            System.out.println(playerName + ": " + points.get(playerName) + " points");
+            ioProvider.writeLine(playerName + ": " + points.get(playerName) + " points");
         }
 
         printSeparator();

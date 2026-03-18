@@ -1,10 +1,8 @@
 package whistapp.ui;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
-import whistapp.application.Controller;
+import whistapp.application.*;
 
 /**
  * Base CLI for game modes that run a Whist game loop.
@@ -21,8 +19,8 @@ public abstract class GameCLI extends CLI {
      *
      * @param controller the application controller used by the CLI
      */
-    public GameCLI(Controller controller) {
-        super(controller);
+    public GameCLI(IController controller, InputOutputProvider ioProvider) {
+        super(controller, ioProvider);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -78,7 +76,7 @@ public abstract class GameCLI extends CLI {
      * Shows an exit message and gracefully exits the game.
      */
     protected void exit() {
-        System.out.println("Thanks for playing!");
+        ioProvider.writeLine("Thanks for playing!");
         this.controller.exit();
     }
 
@@ -115,17 +113,17 @@ public abstract class GameCLI extends CLI {
      * Display a given hand.
      */
     protected void showHand(String header, String[] cards) {
-        System.out.println(header);
+        ioProvider.writeLine(header);
         for (int i = 0; i < cards.length; i++) {
-            System.out.printf("  • %-20s", cards[i]);
+            ioProvider.writeLine("  • " + String.format("%-20s", cards[i]));
             if ((i + 1) % 3 == 0) {
-                System.out.println();
+                ioProvider.writeLine("");
             }
         }
         if (cards.length % 3 != 0) {
-            System.out.println();
+            ioProvider.writeLine("");
         }
-        System.out.println();
+        ioProvider.writeLine("");
     }
 
     /**
@@ -138,7 +136,7 @@ public abstract class GameCLI extends CLI {
         if ("Open Miserie".equals(controller.getFinalBidName())) {
             for (String declarer : controller.getFinalBidDeclarers()) {
                 if (declarer.equals(controller.getActivePlayerName())) {
-                    System.out.println("(Your own Open Miserie hand is shown below under 'Your Hand'.)\n");
+                    ioProvider.writeLine("(Your own Open Miserie hand is shown below under 'Your Hand'.)\n");
                     break;
                 }
             }
@@ -159,7 +157,7 @@ public abstract class GameCLI extends CLI {
     protected void showGameResults() {
         // Clear the screen and show message
         clearScreen();
-        System.out.println("Game results:");
+        ioProvider.writeLine("Game results:");
 
         showPlayerPoints();
     }
@@ -186,7 +184,7 @@ public abstract class GameCLI extends CLI {
 
         // Print the scores for each player
         for (String playerName : controller.getPlayerNames()) {
-            System.out.println(playerName + ": " + scores.get(playerName) + " points");
+            ioProvider.writeLine(playerName + ": " + scores.get(playerName) + " points");
         }
     }
 }

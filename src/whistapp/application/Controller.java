@@ -1,6 +1,5 @@
 package whistapp.application;
 
-import whistapp.domain.bids.BidType;
 import whistapp.domain.cards.Suit;
 import whistapp.domain.game.ScoreGame;
 import whistapp.domain.players.BotDifficulty;
@@ -8,14 +7,13 @@ import whistapp.domain.game.PlayGame;
 import whistapp.domain.game.Game;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 /**
  * The controller; acts as a thin communication layer between the UI layer and DOMAIN layer
  */
-public class Controller {
+public class Controller implements IController{
 
     private Game game;
 

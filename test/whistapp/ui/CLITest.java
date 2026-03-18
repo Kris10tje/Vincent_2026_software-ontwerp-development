@@ -1,175 +1,159 @@
 package whistapp.ui;
 
 import org.junit.jupiter.api.*;
-import whistapp.application.Controller;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.Mockito.*;
+import whistapp.application.IController;
+import whistapp.ui.TestClasses.TestCLI;
 
-/**
- * Unit tests for CLI class
- */
-class CLITest {
+public class CLITest {
+    private InputOutputProvider mockInputOutput;
+    private IController mockController;
+    private TestCLI cli;
 
-    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-    private final PrintStream originalOut = System.out;
-
-    @BeforeEach
-    void setUpStreams() {
-        System.setOut(new PrintStream(outContent));
-    }
-
-    @AfterEach
-    void restoreStreams() {
-        System.setOut(originalOut);
-    }
-
-    private static class TestCLI extends CLI {
-        public TestCLI(Controller controller) {
-            super(controller);
-        }
-
-        // public wrappers so tests can call protected methods
-        public String callGetInputString(String prompt) {
-            return getInputString(prompt);
-        }
-
-        public int callGetInputInt(String prompt) {
-            return getInputInt(prompt);
-        }
-
-        public <T> T callGetChoice(String question, T[] options) {
-            return getChoice(question, options);
-        }
-
-        public boolean callGetYesNo(String question) {
-            return getYesNo(question);
-        }
-
-        public <T> T[] callGetChoices(String question, T[] options) {
-            return getChoices(question, options);
-        }
-    }
-
-    private TestCLI buildCLI(String simulatedInput) {
-        Scanner scanner = new Scanner(new ByteArrayInputStream(simulatedInput.getBytes()));
-        TestCLI cli = new TestCLI(new Controller());
-        cli.scanner = scanner;
-        return cli;
-    }
-
-    private String getOutput() {
-        return outContent.toString();
+    public CLITest()
+    {
+        this.mockInputOutput= mock(InputOutputProvider.class);
+        this.mockController = mock(IController.class);
+        this.cli = new TestCLI(mockController, mockInputOutput);
     }
 
     @Test
     @DisplayName("getInputString")
     void testGetInputString() {
+        //Arrange
         String input = "hello world\n";
-        TestCLI cli = buildCLI(input);
+        String output = "Enter text";
 
-        String result = cli.callGetInputString("Enter text");
-        String output = getOutput();
+        when(mockInputOutput.readLine()).thenReturn(input);
 
-        assertEquals("hello world", result, "Should return string entered by user");
-        assertTrue(output.contains("Enter text: "), "Should prompt with provided prompt");
+        //Act
+        String result = cli.callGetInputString(output);
+
+        //Assert
+        assertEquals(input, result, "Should return string entered by user");
+        verify(mockInputOutput).writeLine(contains(output));
     }
 
     @Test
     @DisplayName("getInputInt")
     void testGetInputInt() {
+        //Arrange
+        String output = "Enter number";
         String input = "42\n";
-        TestCLI cli = buildCLI(input);
+        when(mockInputOutput.readLine()).thenReturn(input);
 
-        int result = cli.callGetInputInt("Enter number");
-        String output = getOutput();
+        //Act
+        int result = cli.callGetInputInt(output);
 
         assertEquals(42, result, "Should return number entered by user");
-        assertTrue(output.contains("Enter number: "), "Should prompt with provided prompt");
+        verify(mockInputOutput).writeLine(contains(output));
     }
 
     @Test
     @DisplayName("getChoice")
     void testGetChoice_valid() {
+        //Arrange
         String input = "2\n";
-        TestCLI cli = buildCLI(input);
-
         String[] options = {"first", "second", "third"};
-        String choice = cli.callGetChoice("Pick one", options);
-        String output = getOutput();
+        when(mockInputOutput.readLine()).thenReturn(input);
 
+        //Act
+        String choice = cli.callGetChoice("Pick one", options);
+
+        //Assert
         assertEquals("second", choice, "Should return choice made by user");
-        // ensure option texts are printed
-        assertTrue(output.contains("first"), "Should print all options");
-        assertTrue(output.contains("second"), "Should print all options");
-        assertTrue(output.contains("third"), "Should print all options");
+
+        verify(mockInputOutput).writeLine(contains("first"));
+        verify(mockInputOutput).writeLine(contains("second"));
+        verify(mockInputOutput).writeLine(contains("third"));
     }
 
     @Test
     @DisplayName("getChoice retry")
     void testGetChoice_invalidThenValid() {
-        // first enter an invalid choice (3), then press enter (\n), then a valid (1)
-        String input = "3\n\n1\n";
-        TestCLI cli = buildCLI(input);
+        //Arrange
+        // first enter an invalid choice (3), then a valid (1)
+        when(mockInputOutput.readLine()).thenReturn("3", "1");
 
         String[] options = {"optA", "optB"};
-        String choice = cli.callGetChoice("Choose", options);
-        String output = getOutput();
 
+        //Act
+        String choice = cli.callGetChoice("Choose", options);
+        
+        //Assert
         assertEquals("optA", choice, "Should output the choice made by the user");
-        assertTrue(output.contains("Invalid choice"), "Should print invalid choice message on bad input");
+        verify(mockInputOutput).writeLine(contains("Invalid choice"));
     }
 
     @Test
-    @DisplayName("getYesNo")
-    void testGetYesNo_expectedBehavior() {
+    @DisplayName("getNo")
+    void testGetYesNo_expectedBehaviorGetNo() {
+        //Arrange
         // First test selecting "No" (0) -> expect false
-        TestCLI cliNo = buildCLI("1\n");
-        boolean no = cliNo.callGetYesNo("Confirm?");
-        // Second test selecting "Yes" (1) -> expect true
-        TestCLI cliYes = buildCLI("2\n");
-        boolean yes = cliYes.callGetYesNo("Confirm?");
+        String input = "1\n";
+        when(mockInputOutput.readLine()).thenReturn(input);
 
-        assertFalse(no, "Selecting option 1 (No) should return false");
-        assertTrue(yes, "Selecting option 2 (Yes) should return true");
+        //Act
+        boolean response = cli.callGetYesNo("Confirm?");
+       
+        //Assert
+        assertFalse(response, "Selecting option 1 (No) should return false");
+    }
+
+    @Test
+    @DisplayName("getYes")
+    void testGetYesNo_expectedBehaviorGetYes() {
+        //Arrange
+        // First test selecting "Yes" (1) -> expect true
+        String input = "2\n";
+        when(mockInputOutput.readLine()).thenReturn(input);
+
+        //Act
+        boolean response = cli.callGetYesNo("Confirm?");
+       
+        //Assert
+        assertTrue(response, "Selecting option 1 (No) should return false");
     }
 
     @Test
     @DisplayName("getChoices")
     void testGetChoices_basic() {
+        //Arrange
         // Toggle option 1 and 3, then finish with 0
-        String input = "1\n3\n0\n";
-        TestCLI cli = buildCLI(input);
-
+        when(mockInputOutput.readLine()).thenReturn("1", "3", "0");
         String[] options = {"A", "B", "C"};
-        String[] result = cli.callGetChoices("Select items", options);
-        String output = getOutput();
 
+        //Act
+        String[] result = cli.callGetChoices("Select items", options);
+
+        //Assert
         // expected indices: 0 and 2
         assertArrayEquals(new String[]{"A", "C"}, result, "Should return all chosen values");
-        assertTrue(output.contains("Complete selection"), "Should show complete selection option");
-        assertTrue(output.contains("A"), "Should show all options");
-        assertTrue(output.contains("B"), "Should show all options");
-        assertTrue(output.contains("C"), "Should show all options");
+        verify(mockInputOutput, times(3)).writeLine(contains("0. Complete selection"));
+        verify(mockInputOutput, times(1)).writeLine(contains("1. [ ] A"));
+        verify(mockInputOutput, times(2)).writeLine(contains("1. [x] A"));
+        verify(mockInputOutput, times(3)).writeLine(contains("2. [ ] B"));
+        verify(mockInputOutput, times(2)).writeLine(contains("3. [ ] C"));
+        verify(mockInputOutput, times(1)).writeLine(contains("3. [x] C"));
     }
 
     @Test
     @DisplayName("getChoices")
     void testGetChoices_invalidThenToggle() {
+        //Arrange
         // invalid "5" (outside range), then press enter (\n), then valid 1 then finish
-        String input = "5\n\n1\n0\n";
-        TestCLI cli = buildCLI(input);
-
+        when(mockInputOutput.readLine()).thenReturn("5", "\n","1", "0");
+        
         String[] options = {"Alpha", "Beta"};
+
+        //Act
         String[] result = cli.callGetChoices("Choose", options);
-        String output = getOutput();
-
+        
+        //Assert
         assertArrayEquals(new String[]{"Alpha"}, result, "Should return all chosen values");
-        assertTrue(output.contains("Invalid choice"), "Should print invalid choice on out-of-range selection");
+        verify(mockInputOutput).writeLine(contains("Invalid choice"));
     }
-
 }

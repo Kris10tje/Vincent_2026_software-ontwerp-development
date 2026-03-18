@@ -1,6 +1,6 @@
 package whistapp.ui;
 
-import whistapp.application.Controller;
+import whistapp.application.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,8 +21,8 @@ public class ScoreGameCLI extends GameCLI {
      * @param controller the application controller used to register players,
      *                   bids and trick counts (must not be {@code null})
      */
-    public ScoreGameCLI(Controller controller) {
-        super(controller);
+    public ScoreGameCLI(IController controller, InputOutputProvider inputProvider) {
+        super(controller, inputProvider);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -45,7 +45,7 @@ public class ScoreGameCLI extends GameCLI {
      */
     protected void showIntro() {
         clearScreen();
-        System.out.println("Keeping track of the score of a physical game of Whist.");
+        ioProvider.writeLine("Keeping track of the score of a physical game of Whist.");
     }
 
     /**
@@ -71,14 +71,14 @@ public class ScoreGameCLI extends GameCLI {
 
                 // Clear the screen, show the error and ask again
                 clearScreen();
-                System.out.println("Failed to start new game: " + e.getMessage());
+                ioProvider.writeLine("Failed to start new game: " + e.getMessage());
                 continue;
 
             }
 
             // Confirmation
             clearScreen();
-            System.out.println("Players registered: \n\n- " + String.join("\n- ", players));
+            ioProvider.writeLine("Players registered: \n\n- " + String.join("\n- ", players));
             break;
 
         }
@@ -153,7 +153,7 @@ public class ScoreGameCLI extends GameCLI {
 
             } catch (Exception e) {
                 clearScreen();
-                System.out.println("Couldn't register bids: " + e.getMessage() + " Try again.");
+                ioProvider.writeLine("Couldn't register bids: " + e.getMessage() + " Try again.");
                 continue;
             }
 
@@ -180,7 +180,7 @@ public class ScoreGameCLI extends GameCLI {
                 controller.registerNbOfTricksWonPerPlayer(nbOfTricksWonPerPlayer);
             } catch (Exception e) {
                 clearScreen();
-                System.out.println("Couldn't register number of tricks won per player: " + e.getMessage());
+                ioProvider.writeLine("Couldn't register number of tricks won per player: " + e.getMessage());
                 continue;
             }
 
@@ -189,7 +189,7 @@ public class ScoreGameCLI extends GameCLI {
             informUser("Round results registered successfully. Here's a summary:");
             ArrayList<String> playersNames = controller.getPlayerNames();
             for (String playerName : playersNames) {
-                System.out.println(playerName + ": " + nbOfTricksWonPerPlayer.get(playerName));
+                ioProvider.writeLine(playerName + ": " + nbOfTricksWonPerPlayer.get(playerName));
             }
 
             break;
@@ -221,10 +221,11 @@ public class ScoreGameCLI extends GameCLI {
     private ArrayList<String> retrievePlayerNames() {
 
         // Make a string array of size [# players] to store the names in
-        String[] names = new String[Controller.getPlayerCount()];
+        int playerCount = Controller.getPlayerCount();
+        String[] names = new String[playerCount];
 
         // Prompt the user for the name of each player and store it in the array
-        for (int i = 0; i < Controller.getPlayerCount(); i++) {
+        for (int i = 0; i < playerCount; i++) {
             names[i] = this.getInputString("Enter name for player " + (i + 1));
         }
 

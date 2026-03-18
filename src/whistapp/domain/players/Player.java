@@ -6,7 +6,6 @@ import whistapp.domain.bids.BidType;
 import whistapp.domain.cards.Card;
 import whistapp.domain.cards.Hand;
 import whistapp.domain.cards.Suit;
-import whistapp.domain.game.Game;
 
 import java.util.ArrayList;
 

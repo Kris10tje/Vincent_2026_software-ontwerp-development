@@ -7,7 +7,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        MainMenuCLI menu = new MainMenuCLI(new Controller());
+        MainMenuCLI menu = new MainMenuCLI(new Controller(), new whistapp.ui.ConsoleInputOutputProvider());
         menu.show();
 
     }

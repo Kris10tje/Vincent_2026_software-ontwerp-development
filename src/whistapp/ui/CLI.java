@@ -4,11 +4,10 @@
 
 package whistapp.ui;
 
-import whistapp.application.Controller;
+import whistapp.application.*;
 
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Scanner;
 
 /**
  * Base class for Command Line Interfaces used in the Whist application.
@@ -18,8 +17,8 @@ import java.util.Scanner;
  */
 public abstract class CLI {
 
-    protected Controller controller;
-    protected Scanner scanner;
+    protected IController controller;
+    protected InputOutputProvider ioProvider;
 
     /* -------------------------------------------------------------------------- */
     /*                                Constructors                                */
@@ -30,9 +29,9 @@ public abstract class CLI {
      *
      * @param controller the application controller used by the CLI
      */
-    public CLI(Controller controller) {
+    public CLI(IController controller, InputOutputProvider ioProvider) {
         this.controller = controller;
-        this.scanner = new Scanner(System.in);
+        this.ioProvider = ioProvider;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -46,8 +45,8 @@ public abstract class CLI {
      * @return the string entered by the user
      */
     protected String getInputString(String prompt) {
-        System.out.print(prompt + ": ");
-        return scanner.nextLine();
+        ioProvider.writeLine(prompt + ": ");
+        return ioProvider.readLine();
     }
 
     /**
@@ -61,12 +60,12 @@ public abstract class CLI {
     protected int getInputInt(String prompt) {
         while (true) {
             try {
-                System.out.print(prompt + ": ");
-                return Integer.parseInt(scanner.nextLine().trim());
+                ioProvider.writeLine(prompt + ": ");
+                return Integer.parseInt(ioProvider.readLine().trim());
             } catch (Exception e) {
                 clearScreen();
-                System.out.println("Invalid integer.\nPress enter to try again.");
-                scanner.nextLine();
+                ioProvider.writeLine("Invalid integer.\nPress enter to try again.");
+                ioProvider.readLine();
             }
         }
 
@@ -81,29 +80,29 @@ public abstract class CLI {
      */
     protected <T> T getChoice(String question, T[] options) {
 
-        System.out.println(question);
+        ioProvider.writeLine(question);
 
         // Print all options
         for (int i = 0; i < options.length; i++) {
-            System.out.println("\t" + (i + 1) + ". " + options[i]);
+            ioProvider.writeLine("\t" + (i + 1) + ". " + options[i]);
         }
 
         // Print the question
-        System.out.print("--> ");
+        ioProvider.writeLine("--> ");
 
         // Validate the integer provided
         int choice;
         try {
-            choice = Integer.parseInt(scanner.nextLine().trim());
+            choice = Integer.parseInt(ioProvider.readLine().trim());
         } catch (NumberFormatException e) {
-            System.out.println("Invalid number. Press enter to try again.");
-            scanner.nextLine();
+            ioProvider.writeLine("Invalid number. Press enter to try again.");
+            ioProvider.readLine();
             return getChoice(question, options);
         }
 
         if (choice <= 0 || choice > options.length) {
-            System.out.println("Invalid choice. Press enter to try again.");
-            scanner.nextLine();
+            ioProvider.writeLine("Invalid choice. Press enter to try again.");
+            ioProvider.readLine();
             return getChoice(question, options);
         }
 
@@ -144,24 +143,24 @@ public abstract class CLI {
             clearScreen();
 
             // Print the question
-            System.out.println(question);
+            ioProvider.writeLine(question);
 
             // Print all options
             for (int i = 0; i < options.length; i++) {
-                System.out.printf("\t%d. [%s] %s%n", i + 1, active[i] ? "x" : " ", options[i]);
+                ioProvider.writeLine("\t" + (i + 1) + ". [" + (active[i] ? "x" : " ") + "] " + options[i]);
             }
 
             // Print the complete selection option
-            System.out.println("\t0. Complete selection");
-            System.out.print("Enter option number to toggle (0 to finish): ");
+            ioProvider.writeLine("\t0. Complete selection");
+            ioProvider.writeLine("Enter option number to toggle (0 to finish): ");
 
             // Validate the integer provided
             int choice;
             try {
-                choice = Integer.parseInt(scanner.nextLine().trim());
+                choice = Integer.parseInt(ioProvider.readLine().trim());
             } catch (NumberFormatException e) {
-                System.out.println("Invalid number. Press enter to try again.");
-                scanner.nextLine();
+                ioProvider.writeLine("Invalid number. Press enter to try again.");
+                ioProvider.readLine();
                 continue;
             }
 
@@ -189,8 +188,8 @@ public abstract class CLI {
                 active[choice - 1] = !active[choice - 1];
             } else {
                 // Invalid choice
-                System.out.println("Invalid choice. Press enter to try again.");
-                scanner.nextLine();
+                ioProvider.writeLine("Invalid choice. Press enter to try again.");
+                ioProvider.readLine();
             }
         }
     }
@@ -204,19 +203,19 @@ public abstract class CLI {
      * <p>It may not work in Windows CMD or some IDE terminals,
      * but works in most Linux terminals and Windows PowerShell.
      */
-    protected static void clearScreen() {
+    protected void clearScreen() {
         // Fallback newlines to push content down if ANSI isn't fully supported
         // for (int i = 0; i < 50; i++) System.out.println();
 
-        System.out.print("\033[H\033[2J"); // ANSI: clear screen + home
-        System.out.flush();
+        ioProvider.writeLine("\033[H\033[2J"); // ANSI: clear screen + home
+        ioProvider.flush();
     }
 
     /**
      * Prints a decorative separator line for better readability in the terminal.
      */
-    protected static void printSeparator() {
-        System.out.println("------------------------------------------------------------");
+    protected void printSeparator() {
+        ioProvider.writeLine("------------------------------------------------------------");
     }
 
     /**
@@ -224,12 +223,12 @@ public abstract class CLI {
      *
      * @param message the message to show
      */
-    protected static void informUser(String message) {
-        System.out.println("");
+    protected void informUser(String message) {
+        ioProvider.writeLine("");
         printSeparator();
-        System.out.println(message);
+        ioProvider.writeLine(message);
         printSeparator();
-        System.out.println("");
+        ioProvider.writeLine("");
     }
 
 }

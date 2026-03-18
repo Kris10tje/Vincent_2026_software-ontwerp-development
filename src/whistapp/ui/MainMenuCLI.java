@@ -1,6 +1,6 @@
 package whistapp.ui;
 
-import whistapp.application.Controller;
+import whistapp.application.*;
 
 public class MainMenuCLI extends CLI {
 
@@ -8,8 +8,8 @@ public class MainMenuCLI extends CLI {
     /*                                Constructors                                */
     /* -------------------------------------------------------------------------- */
 
-    public MainMenuCLI(Controller controller) {
-        super(controller);
+    public MainMenuCLI(IController controller, InputOutputProvider ioProvider) {
+        super(controller, ioProvider);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -18,7 +18,7 @@ public class MainMenuCLI extends CLI {
 
     public void show() {
 
-        System.out.println("Welcome to the game of Whist!");
+        ioProvider.writeLine("Welcome to the game of Whist!");
 
         boolean invalidChoice = true;
 
@@ -37,17 +37,17 @@ public class MainMenuCLI extends CLI {
 
             switch (choice) {
                 case "Start a new point counter for a physical game":
-                    new ScoreGameCLI(controller).show();
+                    new ScoreGameCLI(controller, ioProvider).show();
                     break;
                 case "Play a virtual game":
-                    new PlayGameCLI(controller).show();
+                    new PlayGameCLI(controller, ioProvider).show();
                     break;
                 case "Exit":
                     controller.exit();
                     break;
                 default:
                     invalidChoice = true;
-                    System.out.println("Invalid choice. Please try again.");
+                    ioProvider.writeLine("Invalid choice. Please try again.");
                     break;
             }
 
