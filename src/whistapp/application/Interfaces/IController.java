@@ -10,6 +10,8 @@ public interface IController {
     void exit();
     IScoreGameController startNewScoreGame(ArrayList<String> playerNames);
     IPlayGameController startNewPlayGame(LinkedHashMap<String, BotDifficulty> playerNamesAndBotDifficulties);
+    int getPlayerCount();
+    String[] getBidTypes();
     BotDifficulty[] getBotDifficultyOptions();
     Suit[] getSuits();
 }

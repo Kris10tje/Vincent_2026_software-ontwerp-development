@@ -64,7 +64,7 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
         // Get valid number of real players
         while (true) {
             nbOfRealPlayers = getInputInt("How many real players will play in this game?");
-            if (nbOfRealPlayers <= game.getPlayerCount() && nbOfRealPlayers >= 0) {
+            if (nbOfRealPlayers <= controller.getPlayerCount() && nbOfRealPlayers >= 0) {
                 break;
             } else {
                 ioProvider.writeLine("Invalid number of real players.");
@@ -84,7 +84,7 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
                 int lowBotCount = 1;
                 int highBotCount = 1;
 
-                for (int i = 0; i < game.getPlayerCount(); i++) {
+                for (int i = 0; i < controller.getPlayerCount(); i++) {
                     if (i < nbOfRealPlayers) {
                         playerMap.put(players[i], null); // Null means human player
                     } else {
@@ -109,7 +109,7 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
                     }
                 }
 
-                if (playerMap.size() != game.getPlayerCount()) {
+                if (playerMap.size() != controller.getPlayerCount()) {
                     ioProvider.writeLine("Error: Invalid player names.\nTry again.");
                     continue;
                 }

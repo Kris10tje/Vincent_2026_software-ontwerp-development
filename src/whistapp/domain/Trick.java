@@ -1,6 +1,5 @@
 package whistapp.domain;
 
-import whistapp.domain.Interfaces.*;
 import whistapp.domain.cards.Card;
 import whistapp.domain.cards.Suit;
 import whistapp.domain.game.Game;

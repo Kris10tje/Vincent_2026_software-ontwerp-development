@@ -203,7 +203,7 @@ public class ScoreGameCLI extends GameCLI<IScoreGameController> {
     private ArrayList<String> retrievePlayerNames() {
 
         // Make a string array of size [# players] to store the names in
-        int playerCount = game.getPlayerCount();
+        int playerCount = controller.getPlayerCount();
         String[] names = new String[playerCount];
 
         // Prompt the user for the name of each player and store it in the array
@@ -230,7 +230,7 @@ public class ScoreGameCLI extends GameCLI<IScoreGameController> {
         for (String playerName : playersNames) {
             // Prompt for bid
             String playerBid = getChoice("What is the final active bid for " + playerName + "?",
-                    game.getBidTypes());
+                    controller.getBidTypes());
 
             bids.put(playerName, playerBid);
         }

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import whistapp.domain.cards.Suit;
+import whistapp.domain.players.BotDifficulty;
 
 public interface IPlayGameController extends IGameController {
     String getLastTrickString();

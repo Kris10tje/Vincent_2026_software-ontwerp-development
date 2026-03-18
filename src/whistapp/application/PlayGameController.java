@@ -37,7 +37,7 @@ public class PlayGameController extends GameController<IPlayGame> implements IPl
     }
 
     public void submitBid(String bidType, Suit newTrumpSuit) {
-        submitBid(bidType, newTrumpSuit);
+        game.submitBid(bidType, newTrumpSuit);
     }
 
     public void startPlayingRound() {

@@ -4,14 +4,18 @@ import whistapp.application.Interfaces.IController;
 import whistapp.application.Interfaces.IPlayGameController;
 import whistapp.application.Interfaces.IScoreGameController;
 import whistapp.domain.cards.Suit;
-import whistapp.domain.players.BotDifficulty;
 import whistapp.domain.game.Game;
+import whistapp.domain.players.BotDifficulty;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 /**
  * The controller; acts as a thin communication layer between the UI layer and DOMAIN layer
+ * Info K10
+ * Hier heb ik de methods gezet om 2 soorten games te starten en om een game te stoppen
+ * hier staan ook de methods die de constants of een lijst van enums oproepen
+ * want een controller is er altijd, maa een game nog niet perse
  */
 public class Controller implements IController{
 
@@ -50,21 +54,21 @@ public class Controller implements IController{
     }
 
     /**
-     * A simple getter returning all bids a player can make.
-     *
-     * @return An array of BidTypes, that can be printed as a string
-     */
-    public static String[] getBidTypes() {
-        return Game.getBidTypes();
-    }
-
-    /**
      * A simple getter for the player count of a game
      *
      * @return The number of players (including bots) in a game.
      */
-    public static int getPlayerCount() {
+    public int getPlayerCount() {
         return Game.getPlayerCount();
+    }
+
+    /**
+     * A simple getter returning all bids a player can make.
+     *
+     * @return An array of BidTypes, that can be printed as a string
+     */
+    public String[] getBidTypes() {
+        return Game.getBidTypes();
     }
 
     /**
@@ -76,7 +80,7 @@ public class Controller implements IController{
         return BotDifficulty.values();
     }
 
-    /**
+        /**
      * A simple getter that returns all suits.
      *
      * @return An array containing all suits.
