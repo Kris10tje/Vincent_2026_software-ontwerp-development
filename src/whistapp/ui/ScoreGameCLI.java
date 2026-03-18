@@ -1,8 +1,6 @@
 package whistapp.ui;
 
-import whistapp.application.*;
-import whistapp.domain.Interfaces.IController;
-import whistapp.domain.Interfaces.IScoreGame;
+import whistapp.application.Interfaces.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,7 +9,7 @@ import java.util.HashMap;
 /**
  * CLI for tracking the score of a physical Whist game.
  */
-public class ScoreGameCLI extends GameCLI<IScoreGame> {
+public class ScoreGameCLI extends GameCLI<IScoreGameController> {
 
     /* -------------------------------------------------------------------------- */
     /*                                Constructors                                */
@@ -205,7 +203,7 @@ public class ScoreGameCLI extends GameCLI<IScoreGame> {
     private ArrayList<String> retrievePlayerNames() {
 
         // Make a string array of size [# players] to store the names in
-        int playerCount = Controller.getPlayerCount();
+        int playerCount = game.getPlayerCount();
         String[] names = new String[playerCount];
 
         // Prompt the user for the name of each player and store it in the array
@@ -232,7 +230,7 @@ public class ScoreGameCLI extends GameCLI<IScoreGame> {
         for (String playerName : playersNames) {
             // Prompt for bid
             String playerBid = getChoice("What is the final active bid for " + playerName + "?",
-                    Controller.getBidTypes());
+                    game.getBidTypes());
 
             bids.put(playerName, playerBid);
         }

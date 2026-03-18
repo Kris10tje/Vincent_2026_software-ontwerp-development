@@ -1,12 +1,10 @@
 package whistapp.application;
 
-import whistapp.domain.Interfaces.IController;
-import whistapp.domain.Interfaces.IPlayGame;
-import whistapp.domain.Interfaces.IScoreGame;
+import whistapp.application.Interfaces.IController;
+import whistapp.application.Interfaces.IPlayGameController;
+import whistapp.application.Interfaces.IScoreGameController;
 import whistapp.domain.cards.Suit;
-import whistapp.domain.game.ScoreGame;
 import whistapp.domain.players.BotDifficulty;
-import whistapp.domain.game.PlayGame;
 import whistapp.domain.game.Game;
 
 import java.util.ArrayList;
@@ -32,16 +30,16 @@ public class Controller implements IController{
     /**
      * Start a new game of ScoreWhist with the given player names.
      */
-    public IScoreGame startNewScoreGame(ArrayList<String> playerNames) {
-        return new ScoreGame(playerNames);
+    public IScoreGameController startNewScoreGame(ArrayList<String> playerNames) {
+        return new ScoreGameController(playerNames);
     }
 
     /**
      * Start a new game of PlayWhist with the given player names and bot difficulties.
      * The player map contains player name to BotDifficulty (null if human player).
      */
-    public IPlayGame startNewPlayGame(LinkedHashMap<String, BotDifficulty> playerNamesAndBotDifficulties) {
-        return new PlayGame(playerNamesAndBotDifficulties);
+    public IPlayGameController startNewPlayGame(LinkedHashMap<String, BotDifficulty> playerNamesAndBotDifficulties) {
+        return new PlayGameController(playerNamesAndBotDifficulties);
     }
 
     /**

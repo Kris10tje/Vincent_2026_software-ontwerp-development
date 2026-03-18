@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.*;
 
-import whistapp.domain.Interfaces.IController;
+import whistapp.application.Interfaces.IController;
 import whistapp.ui.TestClasses.TestCLI;
 
 public class CLITest {

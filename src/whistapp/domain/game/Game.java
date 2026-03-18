@@ -251,7 +251,7 @@ public abstract class Game<TRound extends IRound> implements IGame {
         return players;
     }
 
-    /**
+       /**
      * A simple getter finding the scores for each of the players of the game.
      */
     public HashMap<String, Integer> getScoresPerPlayer() {

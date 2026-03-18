@@ -2,14 +2,13 @@ package whistapp.ui;
 
 import java.util.HashMap;
 
-import whistapp.domain.Interfaces.IController;
-import whistapp.domain.Interfaces.IGame;
+import whistapp.application.Interfaces.*;
 
 /**
  * Base CLI for game modes that run a Whist game loop.
  *
  */
-public abstract class GameCLI<TGame extends IGame> extends CLI {
+public abstract class GameCLI<TGame extends IGameController> extends CLI {
 
     protected TGame game;
 

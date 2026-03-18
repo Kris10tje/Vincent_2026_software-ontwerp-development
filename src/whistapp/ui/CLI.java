@@ -4,10 +4,10 @@
 
 package whistapp.ui;
 
-import whistapp.domain.Interfaces.IController;
-
 import java.util.Arrays;
 import java.util.Objects;
+
+import whistapp.application.Interfaces.IController;
 
 /**
  * Base class for Command Line Interfaces used in the Whist application.

@@ -1,6 +1,6 @@
 package whistapp.ui;
 
-import whistapp.domain.Interfaces.IController;
+import whistapp.application.Interfaces.IController;
 
 public class MainMenuCLI extends CLI {
 

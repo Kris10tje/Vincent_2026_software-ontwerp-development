@@ -9,7 +9,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 
-import whistapp.domain.Interfaces.IController;
+import whistapp.application.Interfaces.IController;
 import whistapp.domain.Interfaces.IScoreGame;
 import whistapp.ui.TestClasses.TestScoreGameCLI;
 

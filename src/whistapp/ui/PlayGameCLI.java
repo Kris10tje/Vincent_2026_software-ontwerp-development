@@ -1,15 +1,13 @@
 package whistapp.ui;
 
-import whistapp.application.*;
-import whistapp.domain.Interfaces.IController;
-import whistapp.domain.Interfaces.IPlayGame;
+import whistapp.application.Interfaces.*;
 
 import java.util.*;
 
 /**
  * CLI for playing a virtual game of Whist.
  */
-public class PlayGameCLI extends GameCLI<IPlayGame> {
+public class PlayGameCLI extends GameCLI<IPlayGameController> {
 
 
     /* -------------------------------------------------------------------------- */
@@ -66,7 +64,7 @@ public class PlayGameCLI extends GameCLI<IPlayGame> {
         // Get valid number of real players
         while (true) {
             nbOfRealPlayers = getInputInt("How many real players will play in this game?");
-            if (nbOfRealPlayers <= Controller.getPlayerCount() && nbOfRealPlayers >= 0) {
+            if (nbOfRealPlayers <= game.getPlayerCount() && nbOfRealPlayers >= 0) {
                 break;
             } else {
                 ioProvider.writeLine("Invalid number of real players.");
@@ -86,7 +84,7 @@ public class PlayGameCLI extends GameCLI<IPlayGame> {
                 int lowBotCount = 1;
                 int highBotCount = 1;
 
-                for (int i = 0; i < Controller.getPlayerCount(); i++) {
+                for (int i = 0; i < game.getPlayerCount(); i++) {
                     if (i < nbOfRealPlayers) {
                         playerMap.put(players[i], null); // Null means human player
                     } else {
@@ -111,7 +109,7 @@ public class PlayGameCLI extends GameCLI<IPlayGame> {
                     }
                 }
 
-                if (playerMap.size() != Controller.getPlayerCount()) {
+                if (playerMap.size() != game.getPlayerCount()) {
                     ioProvider.writeLine("Error: Invalid player names.\nTry again.");
                     continue;
                 }
@@ -205,21 +203,6 @@ public class PlayGameCLI extends GameCLI<IPlayGame> {
         game.calculateAndUpdateScores();
     }
 
-    
-    /**
-     * A getter for the index of the player whose turn it currently is.
-     *
-     * @return the index of the player whose turn it currently is.
-     */
-    public int getActivePlayerIndex() {
-        try {
-            String activePlayerName = game.getActivePlayerName();
-            return game.getPlayerNames().indexOf(activePlayerName);
-        } catch (IllegalStateException e) {
-            return -1;
-        }
-    }
-
     /**
      * Run the bidding phase until bidding stabilizes.
      */
@@ -229,10 +212,10 @@ public class PlayGameCLI extends GameCLI<IPlayGame> {
         while (true) {
 
             // Loop until we have a valid final (winning) bid
-            while (!biddingStabilised()) {
+            while (!game.biddingStabilised()) {
 
                 // Pass to the next player
-                int activePlayerIndex = getActivePlayerIndex();
+                int activePlayerIndex = game.getActivePlayerIndex();
 
                 // Check if player is a bot
                 if (game.isAutonomous(activePlayerIndex)) {
@@ -289,7 +272,7 @@ public class PlayGameCLI extends GameCLI<IPlayGame> {
                 if (choice) {
                     // The proposer wishes to play alone.
                     game.registerLoneProposer(proposerName);
-                    biddingStabilised();
+                    game.biddingStabilised();
                     break;
                 }
             }
@@ -297,27 +280,6 @@ public class PlayGameCLI extends GameCLI<IPlayGame> {
         }
     }
 
-    /**
-     * A function that parses the round bidtype, when everyone has picked a bid.
-     *
-     * @return {@code true} if bidding has stabilized and at least one person has picked a bid. {@code false} if everone passed and there was a reshuffle.
-     */
-    private boolean biddingStabilised() {
-        try {
-            boolean stabilised = game.evaluateRoundBids();
-            if (!stabilised) {
-                System.out.println("Everyone passed! Reshuffling and dealing new cards...");
-                try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException ignored) {
-                }
-                game.restartFailedRound();
-            }
-            return stabilised;
-        } catch (IllegalStateException e) {
-            return false;
-        }
-    }
 
     /**
      * Show all existing bids made by players
