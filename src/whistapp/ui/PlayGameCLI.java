@@ -14,6 +14,7 @@ import java.util.*;
 /**
  * CLI for playing a virtual game of Whist.
  */
+//TODO: we hebben in de controller de getcardsbyplayer verwijderd. Daar zat een sort in: die moet hier nog geimplementeerd worden in de ui
 public class PlayGameCLI extends GameCLI<IPlayGameController>  implements IPlayerInputProvider {
 
     /* -------------------------------------------------------------------------- */
@@ -499,8 +500,6 @@ public class PlayGameCLI extends GameCLI<IPlayGameController>  implements IPlaye
      * Displays the hands of the open miserie players.
      */
     private void showOpenMiserieHands(HashMap<IPlayer, ArrayList<ICard>> openMiserieHands) {
-        openMiserieHands = specificGameController.getOpenMiserieHands();
-
         if (openMiserieHands.isEmpty()) return;
         for (IPlayer player : openMiserieHands.keySet()) {
             showHand(player.getName() + "'s Hand (Open Miserie):", openMiserieHands.get(player));

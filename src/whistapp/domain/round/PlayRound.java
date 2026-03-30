@@ -87,23 +87,6 @@ public class PlayRound extends Round implements IPlayRound {
     /*                               Public methods                               */
     /* -------------------------------------------------------------------------- */
 
-    /**
-     * A method for processing the bid of an autonomous player.
-     */
-    //TODO bekijken om te verwijderen
-    public void proceedAutonomousBid() {
-
-        // Check if user input is required. If it is, we can't play autonomously!
-        if (!getCurrentBiddingPlayer().isAutonomous()) {
-            throw new IllegalStateException("Player is not an autonomous player");
-        }
-
-        // Get the autonomous bid
-        var bid = getCurrentBiddingPlayer().chooseBid(getBidContext());
-
-        // Submit the bid
-        submitBid(bid.bidType(), bid.newSuit());
-    }
     public void currentPlayerChooseBid(){
         // Get the autonomous bid
         var bid = getCurrentBiddingPlayer().chooseBid(getBidContext());
@@ -285,20 +268,6 @@ public class PlayRound extends Round implements IPlayRound {
             activeTrumpSuit = getCurrentTrick().getLeadSuit();
             abondanceTrumpChosen = true;
         }
-    }
-
-    /**
-     * A method for processing the autonomous playing of a card in the current trick.
-     */
-    //TODO bekijken om te verwijderen
-    public void processAutonomousCardPlay() {
-        if (!getCurrentPlayingPlayer().isAutonomous()) {
-            throw new IllegalStateException("Player is not a BotPlayer");
-        }
-        // Find the played card by this bot
-        ICard playedCard = getCurrentPlayingPlayer().chooseCard(getRoundContext());
-        // Play the card
-        processCardPlay(playedCard);
     }
 
     public void currentPlayerChooseCard(){
@@ -502,7 +471,7 @@ public class PlayRound extends Round implements IPlayRound {
     public BidType getHighestBid() {
         return highestBid;
     }
-
+    
     /**
      * A getter for the cards in this trick.
      */
@@ -510,7 +479,7 @@ public class PlayRound extends Round implements IPlayRound {
     public LinkedHashMap<Player, ICard> getCardsInTrick() {
         return getCurrentTrick().getPlayedCards();
     }
-
+    
     /**
      * A getter for the current bidding player in this round.
      * This player is the person that's supposed to bid next.

@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
-import javax.xml.crypto.dsig.Transform;
-
 public class PlayGame extends Game<IPlayRound> implements IPlayGame {
 
     /* -------------------------------------------------------------------------- */
@@ -61,29 +59,8 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
     /* -------------------------------------------------------------------------- */
 
 
-    /**
-     * A method starting an autonomous bid in the current round.
-     * Dispatches to the PlayRound class.
-     */
-    //TODO bekijken om te verwijderen
-    public void proceedAutonomousBid() {
-        getCurrentRound().proceedAutonomousBid();
-    }
-
     public void currentPlayerChooseBid(){
         getCurrentRound().currentPlayerChooseBid();
-    }
-
-    /**
-     * A method for submitting a bid for the current player in the current round.
-     * Also advances to the next player.
-     * Dispatches to the PlayRound class.
-     *
-     * @param bidType The bid to submit.
-     */
-    //TODO bekijken om te verwijderen
-    public void submitBid(BidType bidType, Suit newTrumpSuit) {
-        getCurrentRound().submitBid(bidType, newTrumpSuit);
     }
 
     /**
@@ -120,14 +97,6 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      */
     public void processCardPlay(ICard card) {
         getCurrentRound().processCardPlay(card);
-    }
-
-    /**
-     * A method for processing an autonomous card play.
-     * This fails if the current player requires input.
-     */
-    public void processAutonomousCardPlay() {
-        getCurrentRound().processAutonomousCardPlay();
     }
 
     public void currentPlayerChooseCard(){
@@ -206,17 +175,6 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
     }
 
     /**
-     * Returns a string showing every active bid in this round.
-     * Dispatches to the PlayRound class.
-     *
-     * @return the string
-     */
-    //TODO bekijken om deze te verwijderen
-    public LinkedHashMap<IPlayer, BidType> getExistingBids() {
-        return getCurrentRound().getExistingBids();
-    }
-
-    /**
      * Returns the active chosen bids name.
      * Dispatches to the PlayRound class.
      *
@@ -242,23 +200,8 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
         return getCurrentRound().getActivePlayer();
     }
 
-    //TODO bekijken om te verwijderen
-    public BidType[] getPossibleBids() {
-        return getCurrentRound().getPossibleBids();
-    }
-
     public IPlayer getDealer() {
         return getCurrentRound().getDealer();
-    }
-
-    //TODO bekijken om deze te verwijderen
-    public LinkedHashMap<IPlayer, ICard> getCurrentTrickCards() {
-        return Transformer.transformPlayerMapToIPlayerMap(getCurrentRound().getCardsInTrick());
-    }
-
-    //TODO bekijken om deze te verwijderen
-    public ArrayList<ICard> getAllowedCardsForCurrentPlayer() {
-        return getCurrentRound().getAllowedCardsForCurrentPlayer();
     }
 
     public Suit getTrumpSuit() {
@@ -305,7 +248,6 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      *
      * @return The cards of the specified player, as a list of ICards.
      */
-    //TODO bekijken om te verwijderen
     public ArrayList<ICard> getCardsByPlayer(IPlayer player) {
         if (player == null) {
             throw new IllegalArgumentException("Player cannot be null");
@@ -323,16 +265,6 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
     }
 
     /**
-     * A getter for the last dealt card in the current round.
-     *
-     * @return The last dealt card in the current round as a string
-     */
-    //TODO bekijken om deze te verwijderen
-    public ICard getLastDealtCard() {
-        return getCurrentRound().getLastDealtCard();
-    }
-
-    /**
      * A getter for the trick cards of the current trick
      * in the current round.
      *
@@ -345,36 +277,6 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
             result.put(player.getName(), cardsInTrick.get(player).toString());
         }
         return result;
-    }
-
-    /**
-     * A getter for the cards of the other players currently bidding open miserie.
-     *
-     * @param currentPlayer The current player.
-     * @return A map playerName -> cardStrings
-     * never containing currentPlayer as playerName
-     */
-    public HashMap<String, String[]> getOpenMiserieHands(String currentPlayer) {
-        HashMap<String, String[]> result = new HashMap<>();
-        HashMap<Player, ArrayList<ICard>> hands = getCurrentRound().getOpenMiserieHands(getPlayerByName(currentPlayer));
-        for (Player player : hands.keySet()) {
-            String[] cards = new String[hands.get(player).size()];
-            for (int i = 0; i < hands.get(player).size(); i++) {
-                cards[i] = hands.get(player).get(i).toString();
-            }
-            result.put(player.getName(), cards);
-        }
-        return result;
-    }
-    
-    /**
-     * Gets the hands of the open miserie players.
-     *
-     * @return A map of player names and their hands.
-     */
-    //TODO bekijken om te verwijderen
-    public HashMap<IPlayer, ArrayList<ICard>> getOpenMiserieHands() {
-        return Transformer.transformPlayerHashMapToIPlayerMap(getCurrentRound().getOpenMiserieHands((Player) getActivePlayer()));
     }
 
     /**
