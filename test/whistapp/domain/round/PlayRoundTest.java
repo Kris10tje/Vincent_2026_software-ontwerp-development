@@ -12,6 +12,8 @@ import whistapp.domain.players.Player;
 
 import whistapp.domain.interfaces.ICard;
 import whistapp.domain.players.PlayerType;
+import whistapp.domain.players.strategy.HighBotStrategy;
+import whistapp.domain.players.strategy.HumanStrategy;
 
 import java.util.ArrayList;
 
@@ -30,10 +32,10 @@ class PlayRoundTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("Gary", PlayerType.HUMAN);
-        player2 = new Player("Jack", PlayerType.HUMAN);
-        player3 = new Player("Jacky", PlayerType.HUMAN);
-        player4 = new Player("Alice", PlayerType.HIGH_BOT);
+        player = new Player("Gary", new HumanStrategy(null));
+        player2 = new Player("Jack", new HumanStrategy(null));
+        player3 = new Player("Jacky", new HumanStrategy(null));
+        player4 = new Player("Alice", new HighBotStrategy());
         players = new ArrayList();
         players.add(player);
         players.add(player2);

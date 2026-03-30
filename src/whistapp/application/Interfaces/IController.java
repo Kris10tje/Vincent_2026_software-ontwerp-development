@@ -4,12 +4,13 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 import whistapp.domain.cards.Suit;
+import whistapp.domain.interfaces.IPlayerInputProvider;
 import whistapp.domain.players.PlayerType;
 
 public interface IController {
     void exit();
     IScoreGameController startNewScoreGame(ArrayList<String> playerNames);
-    IPlayGameController startNewPlayGame(LinkedHashMap<String, PlayerType> playerNamesAndBotDifficulties);
+    IPlayGameController startNewPlayGame(LinkedHashMap<String, PlayerType> playerNamesAndBotDifficulties, IPlayerInputProvider playerInputProvider);
     int getPlayerCount();
     String[] getBidTypes();
     PlayerType[] getBotTypes();

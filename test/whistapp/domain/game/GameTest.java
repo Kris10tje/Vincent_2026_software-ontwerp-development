@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import whistapp.domain.interfaces.IPlayer;
 import whistapp.domain.players.Player;
+import whistapp.domain.players.strategy.HumanStrategy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,18 +16,18 @@ class GameTest {
 
     private ScoreGame game;
 
-    private String player1;
-    private String player2;
-    private String player3;
-    private String player4;
+    private Player player1;
+    private Player player2;
+    private Player player3;
+    private Player player4;
 
-    private ArrayList<String> players;
+    private ArrayList<Player> players;
     @BeforeEach
     void setUp() {
-        player1 = "Gary";
-        player2 = "Jack";
-        player3 = "Alice";
-        player4 = "Frank";
+        player1 = new Player("Gary", new HumanStrategy(null));
+        player2 = new Player("Jack", new HumanStrategy(null));
+        player3 = new Player("Alice", new HumanStrategy(null));
+        player4 = new Player("Frank", new HumanStrategy(null));
         players = new ArrayList<>(Arrays.asList(player1, player2, player3, player4));
 
         game = new ScoreGame(players);
@@ -55,14 +56,14 @@ class GameTest {
 
     @Test
     void getPlayerByName_valid() {
-        assertEquals(player1, game.getPlayerByName(player1).getName());
+        assertEquals(player1, game.getPlayerByName(player1.getName()).getName());
         assertEquals(player1, game.getPlayerByName("gary").getName());
         assertEquals(player1, game.getPlayerByName("gaRY").getName());
-        assertEquals(player2, game.getPlayerByName(player2).getName());
+        assertEquals(player2, game.getPlayerByName(player2.getName()).getName());
         assertEquals(player2, game.getPlayerByName("jack").getName());
         assertEquals(player2, game.getPlayerByName("jaCk").getName());
-        assertEquals(player3, game.getPlayerByName(player3).getName());
-        assertEquals(player4, game.getPlayerByName(player4).getName());
+        assertEquals(player3, game.getPlayerByName(player3.getName()).getName());
+        assertEquals(player4, game.getPlayerByName(player4.getName()).getName());
     }
 
     @Test

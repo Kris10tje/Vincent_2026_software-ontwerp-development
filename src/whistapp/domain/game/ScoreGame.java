@@ -15,9 +15,9 @@ public class ScoreGame extends Game<IScoreRound> implements IScoreGame {
     /**
      * A no-arg constructor for the ScoreGame class.
      */
-    public ScoreGame() {
+    /*public ScoreGame() {
         super();
-    }
+    }*/
 
     /**
      * A constructor immediately incorporating the players into the game.
@@ -25,12 +25,15 @@ public class ScoreGame extends Game<IScoreRound> implements IScoreGame {
      * @param players The players playing this game.
      * @throws IllegalArgumentException The players are not of correct size.
      */
-    public ScoreGame(ArrayList<String> players) throws IllegalArgumentException {
+    /*public ScoreGame(ArrayList<String> players) throws IllegalArgumentException {
         super();
 
         // No Bots allowed in a ScoreGame
         initializeHumanPlayers(players);
-    }
+    }*/
+   public ScoreGame(ArrayList<Player> players){
+    super(players);
+   }
 
     @Override
     protected IScoreRound createRound() {
@@ -51,7 +54,7 @@ public class ScoreGame extends Game<IScoreRound> implements IScoreGame {
      * <p><b>Precondition:</b> The number of players provided is 4:
      * {@code players.size() == 4}
      */
-    public void initializeHumanPlayers(ArrayList<String> players)
+    /*public void initializeHumanPlayers(ArrayList<String> players)
             throws IllegalArgumentException, IllegalStateException {
 
         LinkedHashMap<String, PlayerType> playersAndTypes = new LinkedHashMap<>();
@@ -59,7 +62,7 @@ public class ScoreGame extends Game<IScoreRound> implements IScoreGame {
             playersAndTypes.put(player, PlayerType.HUMAN);
         }
         initializePlayers(playersAndTypes);
-    }
+    }*/
 
 
     /**

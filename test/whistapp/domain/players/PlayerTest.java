@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Test;
 import whistapp.domain.cards.Card;
 import whistapp.domain.cards.Suit;
 import whistapp.domain.cards.Value;
+import whistapp.domain.players.strategy.HighBotStrategy;
+import whistapp.domain.players.strategy.HumanStrategy;
+import whistapp.domain.players.strategy.LowBotStrategy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,9 +24,9 @@ class PlayerTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("Name", PlayerType.HUMAN);
-        player2 = new Player("Name2", PlayerType.LOW_BOT);
-        player3 = new Player("Name3", PlayerType.HIGH_BOT);
+        player = new Player("Name", new HumanStrategy(null));
+        player2 = new Player("Name2", new LowBotStrategy());
+        player3 = new Player("Name3", new HighBotStrategy());
 
         cards = new ArrayList<>();
         cards.add(new Card(Suit.SPADES, Value.ACE));

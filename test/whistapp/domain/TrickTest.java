@@ -7,6 +7,7 @@ import whistapp.domain.cards.Suit;
 import whistapp.domain.cards.Value;
 import whistapp.domain.players.Player;
 import whistapp.domain.players.PlayerType;
+import whistapp.domain.players.strategy.HumanStrategy;
 
 import java.util.ArrayList;
 
@@ -31,10 +32,10 @@ class TrickTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("p1", PlayerType.HUMAN);
-        player2 = new Player("p2", PlayerType.HUMAN);
-        player3 = new Player("p3", PlayerType.HUMAN);
-        player4 = new Player("p4", PlayerType.HUMAN);
+        player = new Player("p1", new HumanStrategy(null));
+        player2 = new Player("p2", new HumanStrategy(null));
+        player3 = new Player("p3", new HumanStrategy(null));
+        player4 = new Player("p4", new HumanStrategy(null));
         players = new ArrayList();
         players.add(player);
         players.add(player2);

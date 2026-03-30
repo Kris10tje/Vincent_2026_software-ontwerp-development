@@ -40,13 +40,14 @@ public enum PlayerType {
     /**
      * A getter for the strategy of a player of this type.
      */
-    public PlayerStrategy getStrategy() {
+    /* moved to playerfactory */
+    /* public PlayerStrategy getStrategy() {
         return switch (this) {
             case LOW_BOT -> new LowBotStrategy();
             case HIGH_BOT -> new HighBotStrategy();
             default -> new HumanStrategy();
         };
-    }
+    }*/
 
     @Override
     public String toString() {

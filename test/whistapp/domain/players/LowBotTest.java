@@ -10,6 +10,7 @@ import whistapp.domain.cards.Value;
 import java.util.ArrayList;
 import java.util.Arrays;
 import whistapp.domain.interfaces.ICard;
+import whistapp.domain.players.strategy.LowBotStrategy;
 import whistapp.domain.round.RoundContext;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,8 +28,8 @@ class LowBotTest {
 
     @BeforeEach
     void setUp() {
-        lowBot = new Player("LowBot", PlayerType.LOW_BOT);
-        p2 = new Player("p2", PlayerType.LOW_BOT);
+        lowBot = new Player("LowBot", new LowBotStrategy());
+        p2 = new Player("p2", new LowBotStrategy());
 
 
         cards = new ArrayList<>();

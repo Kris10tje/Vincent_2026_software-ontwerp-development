@@ -8,6 +8,8 @@ import whistapp.domain.bids.ProposalAlone;
 import whistapp.domain.bids.Solo;
 import whistapp.domain.players.Player;
 import whistapp.domain.players.PlayerType;
+import whistapp.domain.players.strategy.HumanStrategy;
+import whistapp.domain.players.strategy.LowBotStrategy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,10 +32,10 @@ class RoundTest {
 
     @BeforeEach
     void setUp() {
-        player1 = new Player("Gary", PlayerType.HUMAN);
-        player2 = new Player("Jack", PlayerType.LOW_BOT);
-        player3 = new Player("Alice", PlayerType.LOW_BOT);
-        player4 = new Player("Frank", PlayerType.LOW_BOT);
+        player1 = new Player("Gary", new HumanStrategy(null));
+        player2 = new Player("Jack", new LowBotStrategy());
+        player3 = new Player("Alice", new LowBotStrategy());
+        player4 = new Player("Frank", new LowBotStrategy());
         players = new ArrayList<>(Arrays.asList(player1, player2, player3, player4));
         round = new ScoreRound(players);
         declarers = new ArrayList<>(List.of(player3));

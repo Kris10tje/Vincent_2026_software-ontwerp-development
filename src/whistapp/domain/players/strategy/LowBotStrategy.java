@@ -6,17 +6,18 @@ import whistapp.domain.interfaces.ICard;
 import whistapp.domain.round.RoundContext;
 
 public class LowBotStrategy implements PlayerStrategy{
-    @Override
+    /*zijn deze overrides nodig?? */
+    //@Override
     public BidType chooseBid(Hand hand, RoundContext context) {
         return BidType.PASS;
     }
 
-    @Override
+    //@Override
     public ICard chooseCard(Hand hand, RoundContext context) {
         return hand.getOuterCard(context.getCurrentTrickSuit(), false);
     }
 
-    @Override
+    //@Override
     public boolean isAutonomous() {
         return true;
     }

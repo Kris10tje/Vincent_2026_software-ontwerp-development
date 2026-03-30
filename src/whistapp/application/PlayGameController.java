@@ -12,12 +12,13 @@ import whistapp.domain.interfaces.IPlayGame;
 import whistapp.domain.cards.Suit;
 import whistapp.domain.game.PlayGame;
 import whistapp.domain.interfaces.IPlayer;
+import whistapp.domain.interfaces.IPlayerInputProvider;
 import whistapp.domain.players.PlayerType;
 
 public class PlayGameController extends GameController<IPlayGame> implements IPlayGameController {
     
-    public PlayGameController(LinkedHashMap<String, PlayerType> playerNamesAndBotDifficulties){
-        game = new PlayGame(playerNamesAndBotDifficulties);
+    public PlayGameController(LinkedHashMap<String, PlayerType> playerNamesAndBotDifficulties, IPlayerInputProvider playerInputProvider){
+        game = new PlayGame(createPlayerList(playerNamesAndBotDifficulties, playerInputProvider));
     }
 
     public void updateScores(HashMap<IPlayer, Integer> tricksPerPlayer) {

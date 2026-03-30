@@ -5,6 +5,7 @@ import whistapp.application.interfaces.IPlayGameController;
 import whistapp.application.interfaces.IScoreGameController;
 import whistapp.domain.cards.Suit;
 import whistapp.domain.game.Game;
+import whistapp.domain.interfaces.IPlayerInputProvider;
 import whistapp.domain.players.PlayerType;
 
 import java.util.ArrayList;
@@ -42,8 +43,8 @@ public class Controller implements IController{
      * Start a new game of PlayWhist with the given player names and bot difficulties.
      * The player map contains player name to PlayerType (null if human player).
      */
-    public IPlayGameController startNewPlayGame(LinkedHashMap<String, PlayerType> playerNamesAndBotDifficulties) {
-        return new PlayGameController(playerNamesAndBotDifficulties);
+    public IPlayGameController startNewPlayGame(LinkedHashMap<String, PlayerType> playerNamesAndBotDifficulties, IPlayerInputProvider playerInputProvider) {
+        return new PlayGameController(playerNamesAndBotDifficulties, playerInputProvider);
     }
 
     /**

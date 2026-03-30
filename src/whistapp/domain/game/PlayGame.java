@@ -20,9 +20,9 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
     /**
      * A no-arg constructor for the PlayGame class.
      */
-    public PlayGame() {
+    /*public PlayGame() {
         super();
-    }
+    }*/
  
 
     /**
@@ -30,9 +30,22 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      *
      * @param players A map of players and their respective player type.
      */
-    public PlayGame(LinkedHashMap<String, PlayerType> players) {
+    /*
+    Design Critique: Constructors and Logic
+    You mentioned a concern about "using a bunch of methods inside constructors." You're right to be cautious. In Java (as in C#), constructors should ideally be used for assignment, not orchestration. 
+    The Problem: If initializePlayers is called in the Game constructor, the Game object isn't fully "born" yet while it's trying to set up its internal state. This makes unit testing difficult and can lead to issues if you ever use inheritance.
+    The Fix: Use a Factory or a Builder pattern. Let the GameController or a specific GameFactory create the players first, then pass a finished List<Player> into the Game constructor. This keeps your domain objects "pure."
+    UI Layer: Collects names/types.
+    Controller: Receives the data. It uses a PlayerFactory to create the Player objects.
+    PlayerFactory: * If type is BOT_LOW, it creates a LowBotStrategy. If type is HUMAN, it creates a HumanStrategy and injects the ConsoleInputProvider.
+    Game Object: Is initialized with a completed List<Player>.
+     */
+    /*public PlayGame(LinkedHashMap<String, PlayerType> players) {
         initializePlayers(players);
-    }
+    }*/
+   public PlayGame(ArrayList<Player> players){
+        super(players);
+   }
 
     
     @Override

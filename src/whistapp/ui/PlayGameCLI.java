@@ -110,7 +110,8 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
 
                 // Start the game with the given players and bot difficulties
                 try {
-                    specificGameController = controller.startNewPlayGame(playerMap);
+                    //we pass the playgamecli as playerinputprovider (this)
+                    specificGameController = controller.startNewPlayGame(playerMap, this);
                 } catch (Exception e) {
 
                     clearScreen();

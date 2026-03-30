@@ -24,7 +24,7 @@ public class Player implements IPlayer {
     /**
      * The strategy of this player.
      */
-    private PlayerStrategy playerStrategy;
+    private final PlayerStrategy playerStrategy;
 
     /**
      * The hand of this player.
@@ -39,16 +39,20 @@ public class Player implements IPlayer {
      * A basic constructor for a player,
      * only requiring the name and creating a human player.
      */
-    public Player(String name) {
+    //het zal niet meer mogelijk zijn om een player te maken met enkel een naam, aangezien we ook een strategy nodig hebben.
+    /*public Player(String name) {
         this(name, PlayerType.HUMAN);
-    }
+    }*/
 
     /**
      * A basic constructor for a player.
      */
-    public Player(String name, PlayerType playerType) {
+    //public Player(String name, PlayerType playerType) {
+    public Player(String name, PlayerStrategy strategy) {
+        //TODO check: kan de naam nog gewijzigd worden achteraf? Of moet dat een final zijn?
         setName(name);
-        setPlayerStrategy(playerType);
+        this.playerStrategy = strategy;
+        //setPlayerStrategy(playerType);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -229,10 +233,10 @@ public class Player implements IPlayer {
     /**
      * A setter for the strategy of a player given a player type.
      */
-    private void setPlayerStrategy(PlayerType playerType) {
+    /*private void setPlayerStrategy(PlayerType playerType) {
         if (playerType == null) {
             throw new IllegalArgumentException("PlayerType cannot be null.");
         }
         this.playerStrategy = playerType.getStrategy();
-    }
+    }*/
 }

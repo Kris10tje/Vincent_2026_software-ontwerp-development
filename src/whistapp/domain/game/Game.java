@@ -13,7 +13,7 @@ import java.util.LinkedHashMap;
 
 public abstract class Game<TRound extends IRound> implements IGame {
 
-    protected final ArrayList<Player> players = new ArrayList<>();
+    protected final ArrayList<Player> players;
     private final ArrayList<TRound> rounds = new ArrayList<>(); // Multiple rounds per game
     protected TRound currentRound;
 
@@ -23,7 +23,17 @@ public abstract class Game<TRound extends IRound> implements IGame {
     /*                              Constructors                                  */
     /* -------------------------------------------------------------------------- */
 
-    public Game() {
+    /*
+    Even if you validate the number of players in the Controller or Factory, 
+    the Game class should still protect itself. This is called a Guard Clause. 
+    It ensures that a Game object can never exist in an "invalid state."
+     */
+    public Game(ArrayList<Player> players) {
+        // Check the size
+        if (players.size() != getPlayerCount()) {
+            throw new IllegalArgumentException("Invalid amount of players.");
+        }
+        this.players = players;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -35,7 +45,8 @@ public abstract class Game<TRound extends IRound> implements IGame {
      *
      * @param playerNamesAndTypes A map of player names to their PlayerType. Null means human.
      */
-    protected void initializePlayers(LinkedHashMap<String, PlayerType> playerNamesAndTypes) {
+    /*Deze is niet meer nodig, we gaan de game constructen met een lijst van players. */
+    /*protected void initializePlayers(LinkedHashMap<String, PlayerType> playerNamesAndTypes) {
 
         // Check if the players can be initialized
         validatePlayerInitialization(new ArrayList<>(playerNamesAndTypes.keySet()));
@@ -51,7 +62,7 @@ public abstract class Game<TRound extends IRound> implements IGame {
         // Initialize the player's scores
         setAllScores(0);
 
-    }
+    }*/
 
     /**
      * A method for checking if the number of tricks won per player is valid.
@@ -311,7 +322,9 @@ public abstract class Game<TRound extends IRound> implements IGame {
      * <p><b>Precondition:</b> The game has been initialized with players:
      * {@code getPlayers().size() == 4}
      */
-    protected void setAllScores(int score) {
+    /*Deze werd enkel opgeroepen bij het aanmaken van een lijst van players, maar is de score daar niet sowieso 0? 
+    TODO: nakijken of die nog ergens nodig is.*/
+    /* protected void setAllScores(int score) {
         // Check if the game has been initialized with players
         if (getPlayers().isEmpty()) {
             throw new IllegalStateException("Can't set scores to an uninitialized Game.");
@@ -322,5 +335,5 @@ public abstract class Game<TRound extends IRound> implements IGame {
             Player player = (Player) playerInterface;
             player.updateScore(-player.getScore() + score);
         }
-    }
+    }*/
 }

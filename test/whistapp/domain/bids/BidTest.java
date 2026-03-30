@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import whistapp.domain.players.Player;
 import whistapp.domain.players.PlayerType;
+import whistapp.domain.players.strategy.HumanStrategy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,11 +33,11 @@ class BidTest {
 
     @BeforeEach
     void setUp() {
-        p1 = new Player("p1", PlayerType.HUMAN);
-        p2 = new Player("p2", PlayerType.HUMAN);
-        p3 = new Player("p3", PlayerType.HUMAN);
-        p4 = new Player("p4", PlayerType.HUMAN);
-        p5 = new Player("p5", PlayerType.HUMAN);
+        p1 = new Player("p1", new HumanStrategy(null));
+        p2 = new Player("p2", new HumanStrategy(null));
+        p3 = new Player("p3", new HumanStrategy(null));
+        p4 = new Player("p4", new HumanStrategy(null));
+        p5 = new Player("p5", new HumanStrategy(null));
 
         tricksWon = new HashMap<>();
         tricksWon2 = new HashMap<>();
