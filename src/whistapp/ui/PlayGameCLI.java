@@ -1,6 +1,11 @@
 package whistapp.ui;
 
-import whistapp.application.Interfaces.*;
+import whistapp.application.interfaces.*;
+import whistapp.domain.bids.BidType;
+import whistapp.domain.cards.Suit;
+import whistapp.domain.interfaces.ICard;
+import whistapp.domain.interfaces.IPlayer;
+import whistapp.domain.players.PlayerType;
 
 import java.util.*;
 
@@ -8,7 +13,6 @@ import java.util.*;
  * CLI for playing a virtual game of Whist.
  */
 public class PlayGameCLI extends GameCLI<IPlayGameController> {
-
 
     /* -------------------------------------------------------------------------- */
     /*                                Constructors                                */
@@ -20,7 +24,7 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
      * @param controller the application controller used to manage the game
      * @param ioProvider the input/output provider for user interaction
      */
-    public PlayGameCLI(IController controller, InputOutputProvider ioProvider) {
+    public PlayGameCLI(IController controller, IInputOutputProvider ioProvider) {
         super(controller, ioProvider);
     }
 
@@ -51,7 +55,7 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
      * Prompt the user for player information and start a new game with the controller.
      *
      * <p>The user is first asked how many real players will participate.
-     * If the number is smaller than the total player count, bot difficulty
+     * If the number is smaller than the total player count, bot type
      * is requested and bots will fill the remaining player slots.
      *
      * <p>The method will loop until valid player names are provided.
@@ -79,32 +83,22 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
                 String[] players = getPlayers(nbOfRealPlayers);
 
                 // Create map with player names and bot difficulties
-                LinkedHashMap<String, whistapp.domain.players.BotDifficulty> playerMap = new LinkedHashMap<>();
+                LinkedHashMap<String, PlayerType> playerMap = new LinkedHashMap<>();
                 int botCount = 1;
-                int lowBotCount = 1;
-                int highBotCount = 1;
 
                 for (int i = 0; i < controller.getPlayerCount(); i++) {
                     if (i < nbOfRealPlayers) {
-                        playerMap.put(players[i], null); // Null means human player
+                        // We give the human players a type of HUMAN
+                        playerMap.put(players[i], PlayerType.HUMAN);
                     } else {
-                        // Ask difficulty for this specific bot
-                        whistapp.domain.players.BotDifficulty botDiff = getChoice(
-                                "Choose the difficulty for Bot " + botCount + ".",
-                                controller.getBotDifficultyOptions());
+                        // Ask type for this specific bot
+                        PlayerType botType = getChoice(
+                                "Choose the type for Bot " + botCount + ".",
+                                controller.getBotTypes());
 
                         // Assign automatic name based on difficulty (must be alpha only)
-                        char lowBotSuffix = (char) ('A' + lowBotCount - 1);
-                        char highBotSuffix = (char) ('A' + highBotCount - 1);
-
-                        if (botDiff == whistapp.domain.players.BotDifficulty.LOW) {
-                            playerMap.put("LowBot" + lowBotSuffix, botDiff);
-                            lowBotCount++;
-                        } else if (botDiff == whistapp.domain.players.BotDifficulty.HIGH) {
-                            playerMap.put("HighBot" + highBotSuffix, botDiff);
-                            highBotCount++;
-                        }
-
+                        char botSuffix = (char) ('A' + botCount - 1);
+                        playerMap.put(botType.toString().replace(" ", "") + botSuffix, botType);
                         botCount++;
                     }
                 }
@@ -116,7 +110,7 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
 
                 // Start the game with the given players and bot difficulties
                 try {
-                    game = controller.startNewPlayGame(playerMap);
+                    specificGameController = controller.startNewPlayGame(playerMap);
                 } catch (Exception e) {
 
                     clearScreen();
@@ -150,7 +144,6 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
      * @param nbOfRealPlayers the number of real players participating
      * @return an array containing all human player names
      */
-    // TODO: can we make this GameCLI-wide and reuse it in ScoreGameCLI?
     private String[] getPlayers(int nbOfRealPlayers) {
         // List to keep track of the player names
         String[] players = new String[nbOfRealPlayers];
@@ -176,7 +169,7 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
 
         // Print out round start info
         clearScreen();
-        informUser("Starting a new round!\nThe dealer is: " + game.getDealerName());
+        informUser("Starting a new round!\nThe dealer is: " + specificGameController.getDealer().getName());
 
         showRoundBiddingPhase();
 
@@ -184,8 +177,8 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
         clearScreen();
         printSeparator();
         ioProvider.writeLine("THE BIDDING PHASE HAS ENDED.");
-        ioProvider.writeLine("Winning bid: " + game.getFinalBidName());
-        ioProvider.writeLine("Declarer(s): " + String.join(", ", game.getFinalBidDeclarers()));
+        ioProvider.writeLine("Winning bid: " + specificGameController.getFinalBidName());
+        ioProvider.writeLine("Declarer(s): " + formatPlayers(specificGameController.getFinalBidDeclarers()));
         printSeparator();
 
         // We wait for user before starting the tricks
@@ -195,12 +188,12 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
         informUser("Starting the trick playing phase of the round.");
 
         // Start the trick phase in the domain layer
-        game.startPlayingRound();
+        specificGameController.startPlayingRound();
 
         showRoundTrickPhase();
 
         // Calculate and apply scores for this round.
-        game.calculateAndUpdateScores();
+        specificGameController.calculateAndUpdateScores();
     }
 
     /**
@@ -212,14 +205,14 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
         while (true) {
 
             // Loop until we have a valid final (winning) bid
-            while (!game.biddingStabilised()) {
+            while (!specificGameController.biddingStabilised()) {
 
                 // Pass to the next player
-                int activePlayerIndex = game.getActivePlayerIndex();
+                int activePlayerIndex = specificGameController.getActivePlayerIndex();
 
                 // Check if player is a bot
-                if (game.isAutonomous(activePlayerIndex)) {
-                    game.proceedAutonomousBid();
+                if (specificGameController.isAutonomous(activePlayerIndex)) {
+                    specificGameController.proceedAutonomousBid();
                     continue;
                 }
 
@@ -236,15 +229,18 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
                         // Show all existing bids
                         showExistingBids();
 
+                        // Show the players (that already bid open miserie) their hands
+                        showOpenMiserieHands();
+
                         // Show the active player's hand to help them make a decision on their bid
                         showHand();
 
                         // Get the bid choice
-                        String chosenBid = getChoice("Choose your bid", game.getPossibleBidNames());
-                        if (game.bidRequiresTrumpDeclaration(chosenBid)) {
-                            game.submitBid(chosenBid, getChoice("Choose your preferred trump suit", controller.getSuits()));
+                        BidType chosenBid = getChoice("Choose your bid", specificGameController.getPossibleBids());
+                        if (specificGameController.bidRequiresTrumpDeclaration(chosenBid)) {
+                            specificGameController.submitBid(chosenBid, getChoice("Choose your preferred trump suit", controller.getSuits()));
                         } else {
-                            game.submitBid(chosenBid, null);
+                            specificGameController.submitBid(chosenBid, null);
                         }
 
                         // Stop the loop and pass to the next player
@@ -259,20 +255,20 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
 
             }
 
-            String proposerName = game.getLoneProposerName();
-            if (proposerName == null) {
+            IPlayer proposer = specificGameController.getLoneProposer();
+            if (proposer == null) {
                 break;
             } else {
-                getInputString("Press enter when " + proposerName + " is ready to choose to play the bid alone or pass.");
+                getInputString("Press enter when " + proposer.getName() + " is ready to choose to play the bid alone or pass.");
                 clearScreen();
 
-                showHand("Your Hand:", game.getPlayerCards(proposerName));
+                showHand("Your Hand:", specificGameController.getCardsByPlayer(proposer));
 
                 boolean choice = getYesNo("Do you want to play the bid alone?");
                 if (choice) {
                     // The proposer wishes to play alone.
-                    game.registerLoneProposer(proposerName);
-                    game.biddingStabilised();
+                    specificGameController.registerLoneProposer(proposer);
+                    specificGameController.biddingStabilised();
                     break;
                 }
             }
@@ -282,28 +278,38 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
 
 
     /**
-     * Show all existing bids made by players
+     * Show all existing bids made by players.
      */
     private void showExistingBids() {
-        ioProvider.writeLine(game.getExistingBids() + "\n");
+        ioProvider.writeLine("Currently active bids:");
+        LinkedHashMap<IPlayer, BidType> bids = specificGameController.getExistingBids();
+        for (IPlayer player : bids.keySet()) {
+            ioProvider.writeLine(" - " + player.getName() + ": " + bids.get(player));
+        }
     }
 
     /**
      * Run the trick-playing phase until all tricks have been played.
      */
     private void showRoundTrickPhase() {
-        while (game.getTricksLeft() > 0) {
+        while (true) {
             showTrick();
 
             informUser("The trick is over.");
 
-            String winner = game.getCurrentTrickWinnerName();
-            ioProvider.writeLine("Winner of this trick: " + winner);
-            ioProvider.writeLine("(" + winner + " leads the next trick.)");
+            IPlayer winner = specificGameController.getCurrentTrickWinner();
+            ioProvider.writeLine("Winner of this trick: " + winner.getName());
+            ioProvider.writeLine("(" + winner.getName() + " leads the next trick.)");
             ioProvider.writeLine("");
             getInputString("Press enter to continue");
 
-            game.evaluateAndAdvanceTrick();
+            // Advance the trick
+            boolean finish = specificGameController.evaluateAndAdvanceTrick();
+
+            if (finish) {
+                // All tricks have been played (this can also mean the game has stopped early)
+                break;
+            }
         }
     }
 
@@ -314,9 +320,9 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
      * This allows the next player to take their turn privately.
      */
     private void getReady() {
-        getInputString("Press enter when " + game.getActivePlayerName() + " is ready.");
+        getInputString("Press enter when " + specificGameController.getActivePlayer().getName() + " is ready.");
         clearScreen();
-        informUser("It's " + game.getActivePlayerName() + "'s turn.");
+        informUser("It's " + specificGameController.getActivePlayer().getName() + "'s turn.");
     }
 
     /**
@@ -328,25 +334,25 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
      */
     private void showTrick() {
 
-        while (!game.isTrickOver()) {
+        while (!specificGameController.isTrickOver()) {
 
             // Make sure the next player is ready
-            int activePlayerIndex = game.getActivePlayerIndex();
+            int activePlayerIndex = specificGameController.getActivePlayerIndex();
 
             // Check if player is a bot
-            if (game.isAutonomous(activePlayerIndex)) {
-                game.processAutonomousCardPlay();
+            if (specificGameController.isAutonomous(activePlayerIndex)) {
+                specificGameController.processAutonomousCardPlay();
                 continue;
             }
 
             getReady();
 
             // Show what's currently on the table (cards played by bots before this turn)
-            HashMap<String, String> trickCards = game.getCurrentTrickCardsAsStrings();
+            LinkedHashMap<IPlayer, ICard> trickCards = specificGameController.getCurrentTrickCards();
             if (!trickCards.isEmpty()) {
                 ioProvider.writeLine("Cards on the table (in order of play):");
-                for (java.util.Map.Entry<String, String> entry : trickCards.entrySet()) {
-                    ioProvider.writeLine("  " + entry.getKey() + ": " + entry.getValue());
+                for (java.util.Map.Entry<IPlayer, ICard> entry : trickCards.entrySet()) {
+                    ioProvider.writeLine("  " + entry.getKey().getName() + ": " + CardFormatter.formatCard(entry.getValue()));
                 }
                 ioProvider.writeLine("");
             }
@@ -354,16 +360,16 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
             // Show the trump suits for this round.
             // The original trump is always shown. For Abondance, the active trump
             // may differ or not yet be known (chosen by first card play).
-            String originalTrump = game.getOriginalTrumpSuitName();
-            String activeTrump = game.getTrumpSuitName();
+            Suit originalTrump = specificGameController.getOriginalTrumpSuit();
+            Suit activeTrump = specificGameController.getTrumpSuit();
             if (originalTrump != null) {
-                ioProvider.writeLine("Original trump: " + originalTrump);
+                ioProvider.writeLine("Original trump: " + CardFormatter.formatCardSuit(originalTrump));
             }
             if (activeTrump == null) {
                 // This is a bid that doesn't have a trump (e.g. Miserie)
                 ioProvider.writeLine("Active trump:   None");
             } else if (!activeTrump.equals(originalTrump)) {
-                ioProvider.writeLine("Active trump:   " + activeTrump + " (chosen by bid declarer)");
+                ioProvider.writeLine("Active trump:   " + CardFormatter.formatCardSuit(activeTrump) + " (chosen by bid declarer)");
             }
             // If active trump equals original trump, no extra line is needed.
             ioProvider.writeLine("");
@@ -375,8 +381,10 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
             showHand();
 
             // Build the set of legally allowed cards
-            Set<String> allowedCards = new HashSet<>(
-                    Arrays.asList(game.getAllowedCardsForCurrentPlayer()));
+            Set<String> allowedCards = new HashSet<>();
+            for (ICard card : specificGameController.getAllowedCardsForCurrentPlayer()) {
+                allowedCards.add(CardFormatter.formatCard(card));
+            }
 
             // Get a valid card choice from the active player
             while (true) {
@@ -384,12 +392,13 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
                 try {
 
                     // Build the annotated choices: ★ prefix for legal cards
-                    String[] originalCards = game.getPlayerCards();
-                    String[] choices = new String[originalCards.length + 1];
-                    for (int i = 0; i < originalCards.length; i++) {
-                        choices[i] = allowedCards.contains(originalCards[i])
-                                ? "★ " + originalCards[i]
-                                : originalCards[i];
+                    ArrayList<ICard> originalCards = specificGameController.getCardsForCurrentPlayer();
+                    String[] choices = new String[originalCards.size() + 1];
+                    for (int i = 0; i < originalCards.size(); i++) {
+                        String formattedCard = CardFormatter.formatCard(originalCards.get(i));
+                        choices[i] = allowedCards.contains(formattedCard)
+                                ? "★ " + formattedCard
+                                : formattedCard;
                     }
                     choices[choices.length - 1] = "View Last Trick";
 
@@ -398,7 +407,7 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
 
                     if (chosenCard.equals("View Last Trick")) {
                         try {
-                            ioProvider.writeLine(game.getLastTrickString());
+                            showLastTrick();
                         } catch (Exception e) {
                             ioProvider.writeLine("Error viewing last trick: " + e.getMessage());
                         }
@@ -410,8 +419,19 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
                     // Strip the ★ prefix before registering
                     String cardToPlay = chosenCard.startsWith("★ ") ? chosenCard.substring(2) : chosenCard;
 
+                    ICard selectedCard = null;
+                    for (ICard card : originalCards) {
+                        if (CardFormatter.formatCard(card).equals(cardToPlay)) {
+                            selectedCard = card;
+                            break;
+                        }
+                    }
+                    if (selectedCard == null) {
+                        throw new IllegalArgumentException("Selected card could not be found in hand.");
+                    }
+
                     // Register the card play with the controller
-                    game.processCardPlay(cardToPlay);
+                    specificGameController.processCardPlay(selectedCard);
 
                     // Stop the loop and pass to the next player
                     break;
@@ -432,28 +452,44 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
      * Display the hand of the active player.
      */
     private void showHand() {
-        showHand("Your Hand:", game.getPlayerCards());
+        showHand("Your Hand:", specificGameController.getCardsForCurrentPlayer());
     }
 
     /**
-     * Displays the hands of the open msierie players.
+     * Display a given hand of domain Card objects.
+     * 
+     * <p>This method accepts domain objects (ArrayList<ICard>) and handles the responsibility
+     * of formatting them for display. This maintains GRASP Separation of Concerns: the
+     * Application layer returns domain objects, and the UI layer handles presentation.
+     * 
+     * @param header the header/title for the hand display
+     * @param cards the list of card domain objects to display
      */
-    private void showOpenMiserieHands() {
-        HashMap<String, String[]> cards = game.getOpenMiserieHands();
-        
-        // Print a purposeful notice when the active player is an Open Miserie declarer
-        if ("Open Miserie".equals(game.getFinalBidName())) {
-            for (String declarer : game.getFinalBidDeclarers()) {
-                if (declarer.equals(game.getActivePlayerName())) {
-                    ioProvider.writeLine("(Your own Open Miserie hand is shown below under 'Your Hand'.)\n");
-                    break;
-                }
+    protected void showHand(String header, ArrayList<ICard> cards) {
+        ioProvider.writeLine(header);
+        for (int i = 0; i < cards.size(); i++) {
+            // Format each card using CardFormatter, delegating presentation responsibility to the UI layer
+            String formattedCard = CardFormatter.formatCard(cards.get(i));
+            ioProvider.writeLine("  • " + String.format("%-20s", formattedCard));
+            if ((i + 1) % 3 == 0) {
+                ioProvider.writeLine("");
             }
         }
-        
+        if (cards.size() % 3 != 0) {
+            ioProvider.writeLine("");
+        }
+        ioProvider.writeLine("");
+    }
+
+    /**
+     * Displays the hands of the open miserie players.
+     */
+    private void showOpenMiserieHands() {
+        HashMap<IPlayer, ArrayList<ICard>> cards = specificGameController.getOpenMiserieHands();
+
         if (cards.isEmpty()) return;
-        for (String playerName : cards.keySet()) {
-            showHand(playerName + "'s Hand (Open Miserie):", cards.get(playerName));
+        for (IPlayer player : cards.keySet()) {
+            showHand(player.getName() + "'s Hand (Open Miserie):", cards.get(player));
         }
     }
 
@@ -471,11 +507,11 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
         informUser("Score earned/lost this round:");
 
         // Retrieve the points for each player from the domain layer
-        HashMap<String, Integer> points = game.getRoundScoresPerPlayer();
+        HashMap<IPlayer, Integer> points = specificGameController.getRoundScoresPerPlayer();
 
         // Print the points for each player
-        for (String playerName : game.getPlayerNames()) {
-            ioProvider.writeLine(playerName + ": " + points.get(playerName) + " points");
+        for (IPlayer player : specificGameController.getPlayers()) {
+            ioProvider.writeLine(player.getName() + ": " + points.get(player) + " points");
         }
 
         printSeparator();
@@ -485,6 +521,37 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
      * Shows the last dealt card, which is always dealt face up and determines the trump for some bids.
      */
     protected void showLastDealtCard() {
-        System.out.println("Last dealt card this round: " + game.getLastDealtCard() + "\n");
+        ioProvider.writeLine("Last dealt card this round: " + CardFormatter.formatCard(specificGameController.getLastDealtCard()) + "\n");
+    }
+
+    /**
+     * Displays the last completed trick in order of play.
+     */
+    private void showLastTrick() {
+        LinkedHashMap<IPlayer, ICard> trick = specificGameController.getPreviousTrickCards();
+        if (trick.isEmpty()) {
+            ioProvider.writeLine("No tricks have been played yet.");
+            return;
+        }
+
+        ioProvider.writeLine("Last trick (in order of play):");
+        for (Map.Entry<IPlayer, ICard> entry : trick.entrySet()) {
+            ioProvider.writeLine(entry.getKey().getName() + ": " + CardFormatter.formatCard(entry.getValue()));
+        }
+    }
+
+    /**
+     * Formats an array of players to a comma-separated display string.
+     */
+    private String formatPlayers(IPlayer[] players) {
+        if (players.length == 0) {
+            return "None";
+        }
+
+        String[] names = new String[players.length];
+        for (int i = 0; i < players.length; i++) {
+            names[i] = players[i].getName();
+        }
+        return String.join(", ", names);
     }
 }

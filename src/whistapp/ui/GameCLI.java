@@ -2,7 +2,8 @@ package whistapp.ui;
 
 import java.util.HashMap;
 
-import whistapp.application.Interfaces.*;
+import whistapp.application.interfaces.*;
+import whistapp.domain.interfaces.IPlayer;
 
 /**
  * Base CLI for game modes that run a Whist game loop.
@@ -10,7 +11,18 @@ import whistapp.application.Interfaces.*;
  */
 public abstract class GameCLI<TGame extends IGameController> extends CLI {
 
-    protected TGame game;
+    // TGame is the type of controller (i.e. the interface type that
+    // extends IGameController, being either IPlayGameController or
+    // IScoreGameController [for now]).
+    //
+    // If we now create PlayGameCLI and give the type IPlayGameController
+    // between the diamond operator, the PlayGameCLI will store the game
+    // with type IPlayGameController instead of TGame.
+    //
+    // This means that if we type specificGameController.[...], the IDE only suggests the methods
+    // from that specific interface (game mode). Not only that, but the Java code
+    // simply won't compile if you try to call specificGameController.[methodNotInInterface]!
+    protected TGame specificGameController;
 
     /* -------------------------------------------------------------------------- */
     /*                                Constructors                                */
@@ -21,7 +33,7 @@ public abstract class GameCLI<TGame extends IGameController> extends CLI {
      *
      * @param controller the application controller used by the CLI
      */
-    public GameCLI(IController controller, InputOutputProvider ioProvider) {
+    public GameCLI(IController controller, IInputOutputProvider ioProvider) {
         super(controller, ioProvider);
     }
 
@@ -32,14 +44,14 @@ public abstract class GameCLI<TGame extends IGameController> extends CLI {
     /**
      * Start the interactive score-tracking loop.
      *
-     * <p>This method runs until the user chooses not to start another game.
+    * <p>This method runs until the user chooses not to start another game.
      * It repeatedly:
      * <ol>
      *   <li>shows an introduction,</li>
      *   <li>reads and registers player names,</li>
      *   <li>plays all rounds,</li>
      *   <li>shows game results,</li>
-     *   <li>and asks whether to start another game.</li>
+    *   <li>and asks whether to start another game.</li>
      * </ol>
      *
      * <p>When the user chooses not to continue the loop breaks, naturally falling 
@@ -79,7 +91,7 @@ public abstract class GameCLI<TGame extends IGameController> extends CLI {
     protected void showAllRounds() {
         while (true) {
             // Very important: advance the game to the next round before playing it!
-            game.startNewRound();
+            specificGameController.startNewRound();
 
             // Show the round and its result
             showRound();
@@ -95,7 +107,7 @@ public abstract class GameCLI<TGame extends IGameController> extends CLI {
     protected abstract void showRound();
 
     /**
-     * Shows an exit message and gracefully exits the game.
+    * Shows an exit message and gracefully exits the game.
      */
     protected void exit() {
         ioProvider.writeLine("Thanks for playing!");
@@ -103,7 +115,7 @@ public abstract class GameCLI<TGame extends IGameController> extends CLI {
     }
 
     /**
-     * Ask the user whether they want to start another game.
+    * Ask the user whether they want to start another game.
      *
      * @return {@code true} if the user chooses to play another game,
      * otherwise {@code false}
@@ -149,7 +161,7 @@ public abstract class GameCLI<TGame extends IGameController> extends CLI {
      * Display the intermediate scores of every player.
      *
      * <p>This method is intended to show some intermediate score after a round,
-     * not the results of an entire game.
+    * not the results of an entire game.
      */
     protected void showRoundPoints() {
         // Clear the screen and show message
@@ -163,11 +175,11 @@ public abstract class GameCLI<TGame extends IGameController> extends CLI {
      */
     protected void showPlayerPoints() {
         // Retrieve the final cumulative scores for each player
-        HashMap<String, Integer> scores = game.getScoresPerPlayer();
+        HashMap<IPlayer, Integer> scores = specificGameController.getScoresPerPlayer();
 
         // Print the scores for each player
-        for (String playerName : game.getPlayerNames()) {
-            ioProvider.writeLine(playerName + ": " + scores.get(playerName) + " points");
+        for (IPlayer player : specificGameController.getPlayers()) {
+            ioProvider.writeLine(player.getName() + ": " + scores.get(player) + " points");
         }
     }
 }

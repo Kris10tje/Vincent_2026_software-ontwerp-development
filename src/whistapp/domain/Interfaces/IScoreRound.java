@@ -1,4 +1,4 @@
-package whistapp.domain.Interfaces;
+package whistapp.domain.interfaces;
 
 import java.util.LinkedHashMap;
 

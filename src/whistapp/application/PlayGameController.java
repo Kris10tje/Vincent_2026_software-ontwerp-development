@@ -1,42 +1,39 @@
 package whistapp.application;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
-import whistapp.application.Interfaces.IPlayGameController;
-import whistapp.domain.Interfaces.IPlayGame;
+import whistapp.application.interfaces.IPlayGameController;
+import whistapp.domain.bids.BidType;
+import whistapp.domain.cards.Card;
+import whistapp.domain.interfaces.ICard;
+import whistapp.domain.interfaces.IPlayGame;
 import whistapp.domain.cards.Suit;
 import whistapp.domain.game.PlayGame;
-import whistapp.domain.players.BotDifficulty;
+import whistapp.domain.interfaces.IPlayer;
+import whistapp.domain.players.PlayerType;
 
 public class PlayGameController extends GameController<IPlayGame> implements IPlayGameController {
-    public PlayGameController(LinkedHashMap<String, BotDifficulty> playerNamesAndBotDifficulties){
+    
+    public PlayGameController(LinkedHashMap<String, PlayerType> playerNamesAndBotDifficulties){
         game = new PlayGame(playerNamesAndBotDifficulties);
     }
 
-    public void updateScores(HashMap<String, Integer> tricksPerPlayer) {
+    public void updateScores(HashMap<IPlayer, Integer> tricksPerPlayer) {
         game.updateScores(tricksPerPlayer);
     }
 
-    public String getLastTrickString() {
+    public LinkedHashMap<IPlayer, ICard> getPreviousTrickCards() {
         // Check if a game is active
         if (game == null) {
             throw new IllegalStateException("No game is currently active.");
         }
 
-        // Get the last trick from the current round via the Polymorphic interface
-        String lastTrick = game.getLastTrickString();
-        if (lastTrick == null) {
-            throw new IllegalStateException("No tricks have been played yet in this round.");
-        }
-        return lastTrick;
+        return game.getPreviousTrickCards();
     }
 
-    public int getTricksLeft() {
-        return game.getTricksLeft();
-    }
-
-    public void submitBid(String bidType, Suit newTrumpSuit) {
+    public void submitBid(BidType bidType, Suit newTrumpSuit) {
         game.submitBid(bidType, newTrumpSuit);
     }
 
@@ -48,16 +45,16 @@ public class PlayGameController extends GameController<IPlayGame> implements IPl
         return game.getFinalBidName();
     }
 
-    public String[] getFinalBidDeclarers() {
+    public IPlayer[] getFinalBidDeclarers() {
         return game.getFinalBidDeclarers();
     }
 
-    public String[] getPossibleBidNames() {
-        return game.getPossibleBidNames();
+    public BidType[] getPossibleBids() {
+        return game.getPossibleBids();
     }
 
-    public String getDealerName() {
-        return game.getDealerName();
+    public IPlayer getDealer() {
+        return game.getDealer();
     }
 
     public boolean isTrickOver() {
@@ -72,19 +69,47 @@ public class PlayGameController extends GameController<IPlayGame> implements IPl
         game.calculateAndUpdateScores();
     }
 
-    public void processCardPlay(String card) {
+    public void processCardPlay(ICard card) {
         game.processCardPlay(card);
     }
 
-    public String[] getPlayerCards(String playerName) {
-        return game.getPlayerCards(playerName);
+    /**
+     * Get the cards held by a player by name.
+     * 
+     * <p>This method returns domain objects (ICard) rather than formatted strings.
+     * The UI layer is responsible for formatting these cards for display purposes,
+     * maintaining proper Separation of Concerns per GRASP principles.
+     * 
+     * @param player The player.
+     * @return the list of cards held by the player, sorted.
+     */
+    public ArrayList<ICard> getCardsByPlayer(IPlayer player) {
+
+        // Get ICard interfaces from domain layer
+        ArrayList<ICard> cards = game.getCardsByPlayer(player);
+
+        // Sort cards (this shouldn't happen in the domain layer, because
+        // it is only of interest for showing it to the user in the CLI).
+        Card.sortCards(cards);
+
+        return cards;
     }
 
-    public String[] getPlayerCards() {
-        return game.getPlayerCards();
+    /**
+     * Get the cards held by the current active player.
+     * 
+     * <p>This method returns domain objects (ICard) rather than formatted strings.
+     * The UI layer is responsible for formatting these cards for display purposes.
+     * 
+     * @return the list of cards held by the current player, sorted
+     */
+    public ArrayList<ICard> getCardsForCurrentPlayer() {
+        IPlayer currentPlayer = game.getCurrentPlayer();
+        // Use the method above
+        return getCardsByPlayer(currentPlayer);
     }
 
-    public HashMap<String, String[]> getOpenMiserieHands() {
+    public HashMap<IPlayer, ArrayList<ICard>> getOpenMiserieHands() {
         return game.getOpenMiserieHands();
     }
 
@@ -100,56 +125,56 @@ public class PlayGameController extends GameController<IPlayGame> implements IPl
         game.processAutonomousCardPlay();
     }
 
-    public HashMap<String, Integer> getRoundScoresPerPlayer() {
+    public HashMap<IPlayer, Integer> getRoundScoresPerPlayer() {
         return game.getRoundScoresPerPlayer();
     }
 
-    public LinkedHashMap<String, String> getCurrentTrickCardsAsStrings() {
-        return game.getCurrentTrickCardsAsStrings();
+    public LinkedHashMap<IPlayer, ICard> getCurrentTrickCards() {
+        return game.getCurrentTrickCards();
     }
 
-    public String[] getAllowedCardsForCurrentPlayer() {
+    public ArrayList<ICard> getAllowedCardsForCurrentPlayer() {
         return game.getAllowedCardsForCurrentPlayer();
     }
 
-    public String getTrumpSuitName() {
-        return game.getTrumpSuitName();
+    public Suit getTrumpSuit() {
+        return game.getTrumpSuit();
     }
 
-    public String getOriginalTrumpSuitName() {
-        return game.getOriginalTrumpSuitName();
+    public Suit getOriginalTrumpSuit() {
+        return game.getOriginalTrumpSuit();
     }
 
-    public String getCurrentTrickWinnerName() {
-        return game.getCurrentTrickWinnerName();
+    public IPlayer getCurrentTrickWinner() {
+        return game.getCurrentTrickWinner();
     }
 
-    public String getActivePlayerName() {
-        return game.getActivePlayerName();
+    public IPlayer getActivePlayer() {
+        return game.getActivePlayer();
     }
 
-    public String getLastDealtCard() {
+    public ICard getLastDealtCard() {
         return game.getLastDealtCard();
     }
 
-    public boolean bidRequiresTrumpDeclaration(String chosenBid) {
+    public boolean bidRequiresTrumpDeclaration(BidType chosenBid) {
         return game.bidRequiresTrumpDeclaration(chosenBid);
     }
 
-    public String getExistingBids() {
+    public LinkedHashMap<IPlayer, BidType> getExistingBids() {
         return game.getExistingBids();
     }
 
-    public String getLoneProposerName() {
-        return game.getLoneProposerName();
+    public IPlayer getLoneProposer() {
+        return game.getLoneProposer();
     }
 
-    public void registerLoneProposer(String proposer) {
+    public void registerLoneProposer(IPlayer proposer) {
         game.registerLoneProposer(proposer);
     }
 
     public boolean evaluateRoundBids() {
-        return game.evaluateAndAdvanceTrick();
+        return game.evaluateRoundBids();
     }
 
     public void restartFailedRound() {
@@ -185,8 +210,8 @@ public class PlayGameController extends GameController<IPlayGame> implements IPl
      */
     public int getActivePlayerIndex() {
         try {
-            String activePlayerName = game.getActivePlayerName();
-            return game.getPlayerNames().indexOf(activePlayerName);
+            IPlayer activePlayer = game.getActivePlayer();
+            return game.getPlayerNames().indexOf(activePlayer.getName());
         } catch (IllegalStateException e) {
             return -1;
         }

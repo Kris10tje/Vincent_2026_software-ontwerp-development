@@ -1,6 +1,6 @@
 package whistapp.ui;
 
-import whistapp.application.Interfaces.IController;
+import whistapp.application.interfaces.IController;
 
 public class MainMenuCLI extends CLI {
 
@@ -8,7 +8,7 @@ public class MainMenuCLI extends CLI {
     /*                                Constructors                                */
     /* -------------------------------------------------------------------------- */
 
-    public MainMenuCLI(IController controller, InputOutputProvider ioProvider) {
+    public MainMenuCLI(IController controller, IInputOutputProvider ioProvider) {
         super(controller, ioProvider);
     }
 

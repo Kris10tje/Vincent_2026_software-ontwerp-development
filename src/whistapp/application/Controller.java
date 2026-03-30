@@ -1,11 +1,11 @@
 package whistapp.application;
 
-import whistapp.application.Interfaces.IController;
-import whistapp.application.Interfaces.IPlayGameController;
-import whistapp.application.Interfaces.IScoreGameController;
+import whistapp.application.interfaces.IController;
+import whistapp.application.interfaces.IPlayGameController;
+import whistapp.application.interfaces.IScoreGameController;
 import whistapp.domain.cards.Suit;
 import whistapp.domain.game.Game;
-import whistapp.domain.players.BotDifficulty;
+import whistapp.domain.players.PlayerType;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -40,9 +40,9 @@ public class Controller implements IController{
 
     /**
      * Start a new game of PlayWhist with the given player names and bot difficulties.
-     * The player map contains player name to BotDifficulty (null if human player).
+     * The player map contains player name to PlayerType (null if human player).
      */
-    public IPlayGameController startNewPlayGame(LinkedHashMap<String, BotDifficulty> playerNamesAndBotDifficulties) {
+    public IPlayGameController startNewPlayGame(LinkedHashMap<String, PlayerType> playerNamesAndBotDifficulties) {
         return new PlayGameController(playerNamesAndBotDifficulties);
     }
 
@@ -76,8 +76,9 @@ public class Controller implements IController{
      *
      * @return An array containing all possible difficulties.
      */
-    public BotDifficulty[] getBotDifficultyOptions() {
-        return BotDifficulty.values();
+    public PlayerType[] getBotTypes() {
+        // We remove the Human player from the list
+        return PlayerType.getBotTypes();
     }
 
         /**

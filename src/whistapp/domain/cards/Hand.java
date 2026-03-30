@@ -1,5 +1,6 @@
 package whistapp.domain.cards;
 
+import whistapp.domain.interfaces.ICard;
 import whistapp.domain.round.Round;
 
 import java.util.ArrayList;
@@ -37,15 +38,15 @@ public class Hand {
     /* -------------------------------------------------------------------------- */
 
     /**
-     * A method that plays a card from this hand.
+     * A method that plays a card from this hand using a domain Card interface.
      *
-     * @param card The string card to be played.
+     * @param card The card interface to be played.
      * @return The corresponding card in the hand.
      * @throws IllegalArgumentException The given card isn't found in this hand.
      */
-    public Card playCard(String card) throws IllegalArgumentException {
-        Card playedCard = getCardFromString(card);
-        cards.remove(playedCard); // We also remove this card from this hand
+    public Card playCard(ICard card) throws IllegalArgumentException {
+        Card playedCard = getCardFromInterface(card);
+        cards.remove(playedCard);
         return playedCard;
     }
 
@@ -53,9 +54,9 @@ public class Hand {
      * A simple checker to see if a certain played card
      * is valid for playing from this hand.
      */
-    public boolean isValidCardForPlaying(String card, Suit currentSuit) {
-        for (String s : getAllowedHandCards(currentSuit)) {
-            if (card.equalsIgnoreCase(s)) {
+    public boolean isValidCardForPlaying(ICard card, Suit currentSuit) {
+        for (ICard allowed : getAllowedHandCardsAsCards(currentSuit)) {
+            if (allowed.getSuit() == card.getSuit() && allowed.getValue() == card.getValue()) {
                 return true;
             }
         }
@@ -70,14 +71,9 @@ public class Hand {
      * A simple getter finding the string values
      * of all the cards in this hand.
      */
-    public ArrayList<String> getHandCards() {
-        // First we sort the cards.
-        Card.sortCards(cards);
-        ArrayList<String> handCards = new ArrayList<>();
-        for (Card card : cards) {
-            handCards.add(card.toString());
-        }
-        return handCards;
+    public ArrayList<ICard> getHandCards() {
+        // TODO: sorting logic happens in application layer!!
+        return new ArrayList<ICard>(cards);
     }
 
 
@@ -120,13 +116,12 @@ public class Hand {
      * in the entire hand.
      *
      * @param suit The suit of the card.
-     * @return An empty string if there are no cards in this hand,
-     * A string of the highest or lowest value card
-     * if the suit is present.
+     * @return A card with the highest or lowest value
+     *         if the suit is present.
      */
-    public String getOuterCard(Suit suit, boolean highest) {
+    public ICard getOuterCard(Suit suit, boolean highest) {
         if (isEmpty()) {
-            return "";
+            throw new IllegalStateException("Can't find the outer card if the hand is empty.");
         }
 
         // Get the list of all legally allowed cards for this turn
@@ -147,20 +142,18 @@ public class Hand {
                 outerValue = value;
             }
         }
-        return outerCard.toString();
+        return outerCard;
     }
 
     /**
      * A method for finding all the allowed hand cards for a given suit.
      *
      * @param currentSuit The suit that is currently on the table.
-     * @return The list of all allowed cards.
+     * @return The list of all allowed cards as domain interfaces.
      */
-    public ArrayList<String> getAllowedHandCards(Suit currentSuit) {
-        // We only return the allowed cards
+    public ArrayList<ICard> getAllowedHandCardsAsCards(Suit currentSuit) {
         ArrayList<Card> allowedCards = getAllowedCards(currentSuit);
-        // We map all cards to their string variant.
-        return new ArrayList<>(allowedCards.stream().map(Card::toString).toList());
+        return new ArrayList<>(allowedCards);
     }
 
     /**
@@ -199,7 +192,22 @@ public class Hand {
     }
 
     /**
-     * A simple getter giving whether this hand is empty or not.
+     * A getter finding the card corresponding
+     * to a given card interface in this hand.
+     *
+     * @throws IllegalArgumentException The given card isn't found in this hand.
+     */
+    private Card getCardFromInterface(ICard card) throws IllegalArgumentException {
+        for (Card c : cards) {
+            if (c.getSuit() == card.getSuit() && c.getValue() == card.getValue()) {
+                return c;
+            }
+        }
+        throw new IllegalArgumentException("Card not found");
+    }
+
+    /**
+     * A simple getter finding whether this hand is empty or not.
      */
     public boolean isEmpty() {
         return cards.isEmpty();

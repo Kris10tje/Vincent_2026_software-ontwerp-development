@@ -37,11 +37,4 @@ public enum Value {
         return numericValue;
     }
 
-    @Override
-    public String toString() {
-        String name = name().toLowerCase();
-        String first = String.valueOf(name.charAt(0)).toUpperCase();
-        return first + name.substring(1);
-    }
-
 }

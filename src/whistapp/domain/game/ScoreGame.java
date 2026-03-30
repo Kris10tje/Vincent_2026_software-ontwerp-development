@@ -1,8 +1,9 @@
 package whistapp.domain.game;
 
 import whistapp.domain.players.Player;
+import whistapp.domain.players.PlayerType;
 import whistapp.domain.round.ScoreRound;
-import whistapp.domain.Interfaces.*;
+import whistapp.domain.interfaces.*;
 import whistapp.domain.bids.BidType;
 
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ public class ScoreGame extends Game<IScoreRound> implements IScoreGame {
 
     @Override
     protected IScoreRound createRound() {
-        return new ScoreRound(getPlayers());
+        return new ScoreRound(new ArrayList<>(players));
     }
 
 
@@ -53,18 +54,11 @@ public class ScoreGame extends Game<IScoreRound> implements IScoreGame {
     public void initializeHumanPlayers(ArrayList<String> players)
             throws IllegalArgumentException, IllegalStateException {
 
-        // Check if the players can be initialized
-        validatePlayerInitialization(players);
-
-        // Initialize the players
+        LinkedHashMap<String, PlayerType> playersAndTypes = new LinkedHashMap<>();
         for (String player : players) {
-            Player humanPlayer = new Player(player);
-            this.players.add(humanPlayer);
+            playersAndTypes.put(player, PlayerType.HUMAN);
         }
-
-        // We initialize the player's scores
-        setAllScores(0);
-
+        initializePlayers(playersAndTypes);
     }
 
 
@@ -74,12 +68,12 @@ public class ScoreGame extends Game<IScoreRound> implements IScoreGame {
      *
      * @param bids The map of player names to bids.
      */
-    public void registerBids(HashMap<String, String> bids) {
+    public void registerBids(HashMap<IPlayer, BidType> bids) {
         LinkedHashMap<Player, BidType> playerBids = new LinkedHashMap<>();
 
         // Ensure we preserve the order of players by iterating over Game's players list
-        for (Player player : getPlayers()) {
-            BidType bid = BidType.fromString(bids.get(player.getName()));
+        for (Player player : players) {
+            BidType bid = bids.get(player);
             if (bid == null) {
                 throw new IllegalArgumentException("Missing bid for player: " + player.getName());
             }

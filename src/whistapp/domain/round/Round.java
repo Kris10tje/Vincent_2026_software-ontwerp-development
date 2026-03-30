@@ -1,6 +1,7 @@
 package whistapp.domain.round;
 
-import whistapp.domain.Interfaces.*;
+import whistapp.domain.bids.OpenMiserie;
+import whistapp.domain.interfaces.*;
 import whistapp.domain.bids.Bid;
 import whistapp.domain.bids.BidType;
 import whistapp.domain.game.Game;
@@ -64,8 +65,9 @@ public abstract class Round implements IRound {
             }
             count += numberOfTricksWon;
         }
-        if (count != NUMBER_OF_TRICKS) {
-            throw new IllegalArgumentException("Invalid sum of tricks.");
+        if (count == 0) {
+            // We don't check if the total sums to the number of tricks because of early ending of rounds
+            throw new IllegalArgumentException("Invalid tricks won.");
         }
         HashMap<Player, Integer> scores = getFinalBid().calculatePoints(tricksWon);
 

@@ -1,13 +1,15 @@
 package whistapp.domain.game;
 
 import whistapp.domain.players.Player;
-import whistapp.domain.Interfaces.*;
+import whistapp.domain.interfaces.*;
 import whistapp.domain.bids.BidType;
+import whistapp.domain.players.PlayerType;
 import whistapp.domain.round.Round;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public abstract class Game<TRound extends IRound> implements IGame {
 
@@ -27,6 +29,29 @@ public abstract class Game<TRound extends IRound> implements IGame {
     /* -------------------------------------------------------------------------- */
     /*                               Public methods                               */
     /* -------------------------------------------------------------------------- */
+
+    /**
+     * A method to initialize the given players.
+     *
+     * @param playerNamesAndTypes A map of player names to their PlayerType. Null means human.
+     */
+    protected void initializePlayers(LinkedHashMap<String, PlayerType> playerNamesAndTypes) {
+
+        // Check if the players can be initialized
+        validatePlayerInitialization(new ArrayList<>(playerNamesAndTypes.keySet()));
+
+        // Initialize the players using the explicit Creator pattern
+        for (HashMap.Entry<String, PlayerType> entry : playerNamesAndTypes.entrySet()) {
+            String name = entry.getKey();
+            PlayerType type = entry.getValue();
+
+            this.players.add(new Player(name, type));
+        }
+
+        // Initialize the player's scores
+        setAllScores(0);
+
+    }
 
     /**
      * A method for checking if the number of tricks won per player is valid.
@@ -92,16 +117,15 @@ public abstract class Game<TRound extends IRound> implements IGame {
      *
      * @param tricksPerPlayer The amount of tricks a given player has won.
      */
-    public void updateScores(HashMap<String, Integer> tricksPerPlayer) {
+    public void updateScores(HashMap<IPlayer, Integer> tricksPerPlayer) {
         if (tricksPerPlayer.size() != NUMBER_OF_PLAYERS) {
             throw new IllegalArgumentException("Invalid amount of players.");
         }
 
         // Find the actual player objects corresponding to the names
         HashMap<Player, Integer> tricksWon = new HashMap<>();
-        ArrayList<Player> players = getPlayersByName(new ArrayList<>(tricksPerPlayer.keySet()));
-        for (Player player : players) {
-            tricksWon.put(player, tricksPerPlayer.get(player.getName()));
+        for (IPlayer iPlayer : tricksPerPlayer.keySet()) {
+            tricksWon.put((Player) iPlayer, tricksPerPlayer.get(iPlayer));
         }
 
         // We calculate the score differences
@@ -195,7 +219,7 @@ public abstract class Game<TRound extends IRound> implements IGame {
     /**
      * A simple getter giving the player objects.
      */
-    protected ArrayList<Player> getPlayers() {
+    public ArrayList<IPlayer> getPlayers() {
         // We copy the list so it can't be changed
         return new ArrayList<>(players);
     }
@@ -208,7 +232,7 @@ public abstract class Game<TRound extends IRound> implements IGame {
         ArrayList<String> playerNames = new ArrayList<>();
 
         // Add the player names to the list
-        for (Player player : getPlayers()) {
+        for (IPlayer player : getPlayers()) {
             playerNames.add(player.getName());
         }
 
@@ -223,7 +247,8 @@ public abstract class Game<TRound extends IRound> implements IGame {
     public Player getPlayerByName(String name) {
 
         // Find the player with the given name
-        for (Player player : getPlayers()) {
+        for (IPlayer playerInterface : getPlayers()) {
+            Player player = (Player) playerInterface;
             if (player.getName().equalsIgnoreCase(name)) {
                 return player;
             }
@@ -254,13 +279,14 @@ public abstract class Game<TRound extends IRound> implements IGame {
        /**
      * A simple getter finding the scores for each of the players of the game.
      */
-    public HashMap<String, Integer> getScoresPerPlayer() {
+    public HashMap<IPlayer, Integer> getScoresPerPlayer() {
         // Create a map for the scores
-        HashMap<String, Integer> scoresPerPlayer = new HashMap<>();
+        HashMap<IPlayer, Integer> scoresPerPlayer = new HashMap<>();
 
         // Add the scores to the map
-        for (Player player : getPlayers()) {
-            scoresPerPlayer.put(player.getName(), player.getScore());
+        for (IPlayer playerInterface : getPlayers()) {
+            Player player = (Player) playerInterface;
+            scoresPerPlayer.put(playerInterface, player.getScore());
         }
 
         // Return the map
@@ -292,7 +318,8 @@ public abstract class Game<TRound extends IRound> implements IGame {
         }
 
         // Set the scores of all players
-        for (Player player : getPlayers()) {
+        for (IPlayer playerInterface : getPlayers()) {
+            Player player = (Player) playerInterface;
             player.updateScore(-player.getScore() + score);
         }
     }

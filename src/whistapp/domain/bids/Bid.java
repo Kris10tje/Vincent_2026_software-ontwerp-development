@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import whistapp.domain.interfaces.ICard;
 import whistapp.domain.players.Player;
 
 import static java.util.Arrays.asList;
@@ -72,11 +73,23 @@ public abstract class Bid {
 
     /**
      * Simple checker for if a given player is a declarer of this bid
+     *
      * @param player the player to check for
      * @return {@code true} if that player is a declarer of this bid, {@code false} otherwise
      */
     public boolean isDeclarer(Player player) {
         return this.declarers.contains(player);
+    }
+
+    /**
+     * Simple checker to see if the current bid allows for early ending
+     * of the round for a given number of tricks won per player.
+     *
+     * @param tricksWon The number of tricks won per player in the round.
+     * @return {@code false}
+     */
+    public boolean canEndEarly(HashMap<Player, Integer> tricksWon) {
+        return false;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -100,7 +113,7 @@ public abstract class Bid {
      * This map is empty if the bid isn't open miserie,
      * or if the other players haven't bid open miserie.
      */
-    public HashMap<Player, String[]> getOpenMiserieHands(Player currentPlayer) {
+    public HashMap<Player, ArrayList<ICard>> getOpenMiserieHands(Player currentPlayer) {
         return new HashMap<>();
     }
 

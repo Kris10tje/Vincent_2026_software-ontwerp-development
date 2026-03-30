@@ -3,6 +3,7 @@ package whistapp.domain;
 import whistapp.domain.cards.Card;
 import whistapp.domain.cards.Suit;
 import whistapp.domain.game.Game;
+import whistapp.domain.interfaces.ICard;
 import whistapp.domain.players.Player;
 
 import java.util.ArrayList;
@@ -65,7 +66,7 @@ public class Trick{
      * @throws IllegalStateException    All players already played.
      * @throws IllegalArgumentException The given player already played a card.
      */
-    public void playCardFromCurrentPlayerHand(String card, ArrayList<Player> players)
+    public void playCardFromCurrentPlayerHand(ICard card, ArrayList<Player> players)
             throws IllegalStateException, IllegalArgumentException {
         Card playedCard = getCurrentPlayer().playCard(card, getLeadSuit());
         addCard(playedCard, players);
@@ -154,6 +155,13 @@ public class Trick{
 
     /**
      * A simple getter for finding the cards played per player.
+     */
+    public LinkedHashMap<Player, ICard> getCards() {
+        return new LinkedHashMap<>(playedCards);
+    }
+
+    /**
+     * A simple getter for finding the cards played per player as strings.
      */
     public LinkedHashMap<Player, String> getCardsAsStrings() {
         LinkedHashMap<Player, String> cards = new LinkedHashMap<>();

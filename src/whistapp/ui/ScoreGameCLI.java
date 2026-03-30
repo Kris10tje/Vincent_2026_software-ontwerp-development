@@ -1,6 +1,8 @@
 package whistapp.ui;
 
-import whistapp.application.Interfaces.*;
+import whistapp.application.interfaces.*;
+import whistapp.domain.interfaces.IPlayer;
+import whistapp.domain.bids.BidType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,7 +23,7 @@ public class ScoreGameCLI extends GameCLI<IScoreGameController> {
      * @param controller the application controller used to register players,
      *                   bids and trick counts (must not be {@code null})
      */
-    public ScoreGameCLI(IController controller, InputOutputProvider inputProvider) {
+    public ScoreGameCLI(IController controller, IInputOutputProvider inputProvider) {
         super(controller, inputProvider);
     }
 
@@ -65,7 +67,7 @@ public class ScoreGameCLI extends GameCLI<IScoreGameController> {
             try {
 
                 // There are never bots in a score game so [# real players == # players]
-                game = controller.startNewScoreGame(players);
+                specificGameController = controller.startNewScoreGame(players);
 
             } catch (Exception e) {
 
@@ -155,11 +157,11 @@ public class ScoreGameCLI extends GameCLI<IScoreGameController> {
         while (true) {
 
             // Get the number of tricks won per player from the user
-            HashMap<String, Integer> nbOfTricksWonPerPlayer = getNbOfTricksWonPerPlayer();
+            HashMap<IPlayer, Integer> nbOfTricksWonPerPlayer = getNbOfTricksWonPerPlayer();
 
             // Try to register the number of tricks won per player, if it fails clear the screen and ask again
             try {
-                game.updateScores(nbOfTricksWonPerPlayer);
+                specificGameController.updateScores(nbOfTricksWonPerPlayer);
             } catch (Exception e) {
                 clearScreen();
                 ioProvider.writeLine("Couldn't register number of tricks won per player: " + e.getMessage());
@@ -169,9 +171,9 @@ public class ScoreGameCLI extends GameCLI<IScoreGameController> {
             // Feedback
             clearScreen();
             informUser("Round results registered successfully. Here's a summary:");
-            ArrayList<String> playersNames = game.getPlayerNames();
-            for (String playerName : playersNames) {
-                ioProvider.writeLine(playerName + ": " + nbOfTricksWonPerPlayer.get(playerName));
+            ArrayList<IPlayer> players = specificGameController.getPlayers();
+            for (IPlayer player : players) {
+                ioProvider.writeLine(player.getName() + ": " + nbOfTricksWonPerPlayer.get(player));
             }
 
             break;
@@ -188,7 +190,7 @@ public class ScoreGameCLI extends GameCLI<IScoreGameController> {
         boolean reshuffled = this.getReshuffleState();
 
         // Register the reshuffle state in the domain layer
-        game.setReshuffledState(reshuffled);
+        specificGameController.setReshuffledState(reshuffled);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -221,22 +223,23 @@ public class ScoreGameCLI extends GameCLI<IScoreGameController> {
      * Collects all bids and registers them at once.
      */
     private void promptForBids() {
-        // Get the player names from the domain layer to know which players to ask for
-        ArrayList<String> playersNames = game.getPlayerNames();
+        // Get the player objects from the domain layer and extract names in the UI layer
+        ArrayList<IPlayer> players = specificGameController.getPlayers();
 
-        HashMap<String, String> bids = new HashMap<>();
+        HashMap<IPlayer, BidType> bids = new HashMap<>();
 
         // Ask for each player
-        for (String playerName : playersNames) {
+        for (IPlayer player : players) {
+            String playerName = player.getName();
             // Prompt for bid
-            String playerBid = getChoice("What is the final active bid for " + playerName + "?",
+            String playerBidText = getChoice("What is the final active bid for " + playerName + "?",
                     controller.getBidTypes());
 
-            bids.put(playerName, playerBid);
+            bids.put(player, BidType.fromString(playerBidText));
         }
 
         // Register the collected bids
-        game.registerBids(bids);
+        specificGameController.registerBids(bids);
     }
 
     /**
@@ -244,15 +247,16 @@ public class ScoreGameCLI extends GameCLI<IScoreGameController> {
      *
      * @return an array containing the number of tricks won for each player.
      */
-    private HashMap<String, Integer> getNbOfTricksWonPerPlayer() {
+    private HashMap<IPlayer, Integer> getNbOfTricksWonPerPlayer() {
 
-        // Get the player names from the domain layer to know which players to ask for
-        ArrayList<String> playersNames = game.getPlayerNames();
+        // Get the player objects from the domain layer and extract names in the UI layer
+        ArrayList<IPlayer> players = specificGameController.getPlayers();
 
         // Ask for each player and store the result in a HashMap
-        HashMap<String, Integer> nbOfTricksPerPlayer = new HashMap<>();
-        for (String playerName : playersNames) {
-            nbOfTricksPerPlayer.put(playerName, getInputInt("How many tricks were won by " + playerName));
+        HashMap<IPlayer, Integer> nbOfTricksPerPlayer = new HashMap<>();
+        for (IPlayer player : players) {
+            String playerName = player.getName();
+            nbOfTricksPerPlayer.put(player, getInputInt("How many tricks were won by " + playerName));
         }
 
         // Return the array of tricks per player

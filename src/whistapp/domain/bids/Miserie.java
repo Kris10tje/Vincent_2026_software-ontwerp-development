@@ -62,6 +62,22 @@ public class Miserie extends Bid {
         return scores;
     }
 
+    /**
+     * Simple checker to see if the current bid allows for early ending
+     * of the round for a given number of tricks won per player.
+     *
+     * @param tricksWon The number of tricks won per player in the round.
+     * @return {@code true} if all declarers of the miserie bid have won at least one trick.
+     * {@code false} otherwise.
+     */
+    @Override
+    public boolean canEndEarly(HashMap<Player, Integer> tricksWon) {
+        for (Player player : declarers) {
+            if (tricksWon.get(player) == 0) return false;
+        }
+        return true;
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                             Protected methods                              */
     /* -------------------------------------------------------------------------- */

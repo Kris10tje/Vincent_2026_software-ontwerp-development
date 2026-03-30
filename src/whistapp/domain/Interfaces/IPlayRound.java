@@ -1,40 +1,39 @@
-package whistapp.domain.Interfaces;
+package whistapp.domain.interfaces;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import whistapp.domain.Trick;
 import whistapp.domain.bids.BidType;
-import whistapp.domain.cards.Card;
 import whistapp.domain.cards.Suit;
 import whistapp.domain.players.Player;
 
 public interface IPlayRound extends IRound {
-    String getActivePlayerName();
     void proceedAutonomousBid();
     void submitBid(BidType bidType, Suit newTrumpSuit);
     boolean evaluateRoundBids();
     void restartRound();
     void startPlayingRound();
-    void processCardPlay(String card);
+    void processCardPlay(ICard card);
     void processAutonomousCardPlay();
     boolean evaluateAndAdvanceTrick();
     boolean isCurrentTrickOver();
-    String getExistingBids();
+    LinkedHashMap<IPlayer, BidType> getExistingBids();
     BidType[] getPossibleBids();
     Player getDealer();
-    String[] getAllowedCardsForCurrentPlayer();
-    String getTrumpSuitName();
-    String getOriginalTrumpSuitName();
-    String getCurrentTrickWinnerName();
+    ArrayList<ICard> getAllowedCardsForCurrentPlayer();
     Suit getTrumpSuit();
-    Card getLastDealtCard();
-    HashMap<Player, String[]> getOpenMiserieHands(Player currentPlayer);
-    LinkedHashMap<Player, String> getCardsFromPreviousTrick();
+    Suit getOriginalTrumpSuit();
+    IPlayer getCurrentTrickWinner();
+    ICard getLastDealtCard();
+    HashMap<Player, ArrayList<ICard>> getOpenMiserieHands(Player currentPlayer);
+    LinkedHashMap<Player, ICard> getCardsFromPreviousTrick();
     int getTricksLeft();
     BidType getHighestBid();
-    String getLoneProposerName();
+    Player getLoneProposer();
     void registerLoneProposer(Player proposer);
-    HashMap<Player, String> getCardsInTrick();
+    LinkedHashMap<Player, ICard> getCardsInTrick();
     Trick getCurrentTrick();
+    IPlayer getActivePlayer();
 }

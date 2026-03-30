@@ -1,13 +1,15 @@
 package whistapp.domain.round;
 
 import whistapp.domain.Trick;
-import whistapp.domain.Interfaces.IPlayRound;
+import whistapp.domain.interfaces.IPlayRound;
 import whistapp.domain.bids.Abondance;
 import whistapp.domain.bids.BidType;
 import whistapp.domain.cards.Card;
 import whistapp.domain.cards.Deck;
 import whistapp.domain.cards.Suit;
 import whistapp.domain.game.Game;
+import whistapp.domain.interfaces.ICard;
+import whistapp.domain.interfaces.IPlayer;
 import whistapp.domain.players.Player;
 
 import java.util.*;
@@ -93,7 +95,7 @@ public class PlayRound extends Round implements IPlayRound {
         }
 
         // Get the autonomous bid
-        BidType autonomousBid = getCurrentBiddingPlayer().getAutonomousBid();
+        BidType autonomousBid = getCurrentBiddingPlayer().chooseBid(getRoundContext());
 
         // Submit the bid
         submitBid(autonomousBid, null);
@@ -261,7 +263,7 @@ public class PlayRound extends Round implements IPlayRound {
      *
      * @param card The card played.
      */
-    public void processCardPlay(String card) {
+    public void processCardPlay(ICard card) {
         getCurrentTrick().playCardFromCurrentPlayerHand(card, getPlayers());
 
         // If the winning bid is free-trump Abondance and no trump has been chosen yet,
@@ -282,7 +284,7 @@ public class PlayRound extends Round implements IPlayRound {
             throw new IllegalStateException("Player is not a BotPlayer");
         }
         // Find the played card by this bot
-        String playedCard = getCurrentPlayingPlayer().findAutonomousCard(getCurrentTrick().getLeadSuit());
+        ICard playedCard = getCurrentPlayingPlayer().chooseCard(getRoundContext());
         // Play the card
         processCardPlay(playedCard);
     }
@@ -302,6 +304,11 @@ public class PlayRound extends Round implements IPlayRound {
 
         // We add a trick won to the winning player
         tricksWon.put(winner, tricksWon.get(winner) + 1);
+
+        // We now check if the game can end early
+        if (finalBid.canEndEarly(tricksWon)) {
+            return true;
+        }
 
         // We only advance if we can.
         if (tricks.size() < Round.getTrickCountPerRound()) {
@@ -343,6 +350,14 @@ public class PlayRound extends Round implements IPlayRound {
         highestBid = BidType.ACCEPT;
     }
 
+    /**
+     * Checks whether the bidding phase is still happening in this round.
+     */
+    public boolean isBiddingPhase() {
+        // We are only in the bidding phase if the playing phase hasn't started
+        return tricks.isEmpty();
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                               Private methods                              */
     /* -------------------------------------------------------------------------- */
@@ -377,6 +392,28 @@ public class PlayRound extends Round implements IPlayRound {
     private void startNewTrick(Player startingPlayer) {
         Trick newTrick = new Trick(startingPlayer);
         tricks.add(newTrick);
+    }
+
+    /**
+     * A helper method for advancing the current bidding player to the next one in line.
+     */
+    private void advanceCurrentBiddingPlayer() {
+        currentBiddingPlayer = Player.getNextPlayer(getPlayers(), currentBiddingPlayer);
+    }
+
+    /**
+     * A simple getter for the current round context of this round.
+     */
+    private RoundContext getRoundContext() {
+        RoundContext roundContext;
+        if (isBiddingPhase()) {
+            // We're still in the bidding phase, the playing phase variables can be set to null
+            roundContext = new RoundContext(activeTrumpSuit, null);
+        } else {
+            // We're in the playing phase
+            roundContext = new RoundContext(activeTrumpSuit, getCurrentTrick().getLeadSuit());
+        }
+        return roundContext;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -417,6 +454,14 @@ public class PlayRound extends Round implements IPlayRound {
     }
 
     /**
+     * Returns the original (deck-dealt) trump suit.
+     * This never changes during the round.
+     */
+    public Suit getOriginalTrumpSuit() {
+        return originalTrumpSuit;
+    }
+
+    /**
      * A getter for the last dealt card in this round.
      */
     public Card getLastDealtCard() {
@@ -440,8 +485,8 @@ public class PlayRound extends Round implements IPlayRound {
     /**
      * A getter for the cards in this trick.
      */
-    public HashMap<Player, String> getCardsInTrick() {
-        return getCurrentTrick().getCardsAsStrings();
+    public LinkedHashMap<Player, ICard> getCardsInTrick() {
+        return getCurrentTrick().getCards();
     }
 
     /**
@@ -456,7 +501,7 @@ public class PlayRound extends Round implements IPlayRound {
      * A getter for the cards of the current player bidding.
      */
     public String[] getCurrentBiddingPlayersCards() {
-        return getCurrentBiddingPlayer().getHandCards();
+        return getCurrentBiddingPlayer().getHandCards().stream().map(Object::toString).toArray(String[]::new);
     }
 
     /**
@@ -464,40 +509,23 @@ public class PlayRound extends Round implements IPlayRound {
      * who is currently playing in the current trick.
      */
     public String[] getCurrentPlayingPlayersCards() {
-        return getCurrentPlayingPlayer().getHandCards();
+        return getCurrentPlayingPlayer().getHandCards().stream().map(Object::toString).toArray(String[]::new);
     }
 
     /**
      * A method for finding which cards the current player is legally allowed to play.
      */
-    public String[] getAllowedCardsForCurrentPlayer() {
+    public ArrayList<ICard> getAllowedCardsForCurrentPlayer() {
         Suit leadSuit = getCurrentTrick().getLeadSuit();
-        return getCurrentPlayingPlayer().getAllowedHandCards(leadSuit)
-                .toArray(String[]::new);
+        return getCurrentPlayingPlayer().getAllowedHandCardsAsCards(leadSuit);
     }
 
     /**
      * Returns the name of the player who would win the current trick
      * based on cards played so far and the active trump suit.
      */
-    public String getCurrentTrickWinnerName() {
-        return getCurrentTrick().determineWinner(activeTrumpSuit).getName();
-    }
-
-    /**
-     * Returns the active trump suit name for display.
-     * Returns null if there is no active trump yet.
-     */
-    public String getTrumpSuitName() {
-        return activeTrumpSuit == null ? null : activeTrumpSuit.toString();
-    }
-
-    /**
-     * Returns the original (deck-dealt) trump suit name for display.
-     * This never changes during the round.
-     */
-    public String getOriginalTrumpSuitName() {
-        return originalTrumpSuit == null ? null : originalTrumpSuit.toString();
+    public IPlayer getCurrentTrickWinner() {
+        return getCurrentTrick().determineWinner(activeTrumpSuit);
     }
 
     /**
@@ -525,11 +553,11 @@ public class PlayRound extends Round implements IPlayRound {
     /**
      * A getter for the active player's name (either bidding or playing).
      */
-    public String getActivePlayerName() {
+    public IPlayer getActivePlayer() {
         if (getFinalBid() == null) {
-            return getCurrentBiddingPlayer().getName();
+            return getCurrentBiddingPlayer();
         } else {
-            return getCurrentPlayingPlayer().getName();
+            return getCurrentPlayingPlayer();
         }
     }
 
@@ -538,8 +566,25 @@ public class PlayRound extends Round implements IPlayRound {
      * <p>
      * This method dispatches to the Bid class.
      */
-    public HashMap<Player, String[]> getOpenMiserieHands(Player currentPlayer) {
-        return finalBid.getOpenMiserieHands(currentPlayer);
+    public HashMap<Player, ArrayList<ICard>> getOpenMiserieHands(Player currentPlayer) {
+        if (finalBid == null) {
+            // When the bidding proces is still happening, we check for players that bid open miserie
+
+            // This is a trade-off we make, instead of using polymorphism by already having bids during the bidding phase,
+            // we use an enum (instead of the class itself) as the highest bid to have a better way of listing
+
+            HashMap<Player, ArrayList<ICard>> openMiserieHands = new HashMap<>();
+            for (Player player : bids.keySet()) {
+                if (bids.get(player) == BidType.OPEN_MISERIE) {
+                    // The player bid open miserie
+                    openMiserieHands.put(player, player.getHandCards());
+                }
+            }
+            return openMiserieHands;
+        } else {
+            // The playing phase has already started
+            return finalBid.getOpenMiserieHands(currentPlayer);
+        }
     }
 
     /**
@@ -547,11 +592,11 @@ public class PlayRound extends Round implements IPlayRound {
      *
      * @return The cards of the previous trick.
      */
-    public LinkedHashMap<Player, String> getCardsFromPreviousTrick() {
+    public LinkedHashMap<Player, ICard> getCardsFromPreviousTrick() {
         if (tricks.size() <= 1) {
             throw new IllegalStateException("There is no previous trick to show.");
         }
-        return tricks.get(tricks.size() - 2).getCardsAsStrings();
+        return tricks.get(tricks.size() - 2).getCards();
     }
 
     /**
@@ -559,15 +604,24 @@ public class PlayRound extends Round implements IPlayRound {
      *
      * @return The name of the proposer.
      */
-    public String getLoneProposerName() {
+    public Player getLoneProposer() {
         if (highestBid == BidType.PROPOSAL) {
             for (Player p : bids.keySet()) {
                 if (bids.get(p) == BidType.PROPOSAL) {
-                    return p.getName();
+                    return p;
                 }
             }
         }
         return null;
+    }
+
+    /**
+     * Returns a string showing the bids already made by players this round.
+     *
+     * @return The string of the existing bids.
+     */
+    public LinkedHashMap<IPlayer, BidType> getExistingBids() {
+        return new LinkedHashMap<>(bids);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -606,26 +660,5 @@ public class PlayRound extends Round implements IPlayRound {
         currentBiddingPlayer = dealer;
         advanceCurrentBiddingPlayer();
 
-    }
-
-    /**
-     * A helper method for advancing the current bidding player to the next one in line.
-     */
-    private void advanceCurrentBiddingPlayer() {
-        currentBiddingPlayer = Player.getNextPlayer(getPlayers(), currentBiddingPlayer);
-    }
-
-    /**
-     * Returns a string showing the bids already made by players this round.
-     *
-     * @return The string of the existing bids.
-     */
-    public String getExistingBids() {
-        StringBuilder str = new StringBuilder("Currently active bids:");
-        for (Player player : bids.keySet()) {
-            BidType bid = bids.get(player);
-            str.append("\n - ").append(player.getName()).append(": ").append(bid.toString());
-        }
-        return str.toString();
     }
 }

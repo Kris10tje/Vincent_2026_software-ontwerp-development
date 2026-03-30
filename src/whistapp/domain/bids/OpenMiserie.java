@@ -3,6 +3,7 @@ package whistapp.domain.bids;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import whistapp.domain.interfaces.ICard;
 import whistapp.domain.players.Player;
 
 /**
@@ -23,8 +24,8 @@ public class OpenMiserie extends Miserie {
     /* -------------------------------------------------------------------------- */
 
     @Override
-    public HashMap<Player, String[]> getOpenMiserieHands(Player currentPlayer) {
-        HashMap<Player, String[]> openMiserieHands = new HashMap<>();
+    public HashMap<Player, ArrayList<ICard>> getOpenMiserieHands(Player currentPlayer) {
+        HashMap<Player, ArrayList<ICard>> openMiserieHands = new HashMap<>();
         for (Player declarer : declarers) {
             if (!declarer.equals(currentPlayer)) {
                 openMiserieHands.put(declarer, declarer.getHandCards());

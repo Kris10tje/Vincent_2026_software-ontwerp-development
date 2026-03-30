@@ -7,7 +7,7 @@ package whistapp.ui;
 import java.util.Arrays;
 import java.util.Objects;
 
-import whistapp.application.Interfaces.IController;
+import whistapp.application.interfaces.IController;
 
 /**
  * Base class for Command Line Interfaces used in the Whist application.
@@ -18,7 +18,7 @@ import whistapp.application.Interfaces.IController;
 public abstract class CLI {
 
     protected IController controller;
-    protected InputOutputProvider ioProvider;
+    protected IInputOutputProvider ioProvider;
 
     /* -------------------------------------------------------------------------- */
     /*                                Constructors                                */
@@ -28,8 +28,19 @@ public abstract class CLI {
      * Create a CLI bound to the given controller.
      *
      * @param controller the application controller used by the CLI
+     * @param ioProvider the input/output provider for terminal interaction
+     * 
+     * <p><b>Note:</b> By using an IInputOutputProvider, we avoid using scanner.readLine(),
+     * scanner.nextInt(), etc. directly in the CLI. 
+     * Furthermore, we avoid using System.out.println() directly in the CLI. 
+     * Using an ioProvider allows us to 
+     * <ul>
+     *  <li> inject a mock IInputOutputProvider in tests
+     *  <li> enable us to simulate user input and capture output without relying on actual console I/O
+     * </ul>
+     * This design choice makes the CLI more testable and decouples it from specific I/O implementations.
      */
-    public CLI(IController controller, InputOutputProvider ioProvider) {
+    public CLI(IController controller, IInputOutputProvider ioProvider) {
         this.controller = controller;
         this.ioProvider = ioProvider;
     }

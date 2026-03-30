@@ -6,16 +6,25 @@ import whistapp.domain.bids.BidType;
 import whistapp.domain.cards.Card;
 import whistapp.domain.cards.Hand;
 import whistapp.domain.cards.Suit;
+import whistapp.domain.interfaces.ICard;
+import whistapp.domain.interfaces.IPlayer;
+import whistapp.domain.players.strategy.PlayerStrategy;
+import whistapp.domain.round.RoundContext;
 
 import java.util.ArrayList;
 
 /**
  * Represents a player in the game of Whist.
  */
-public class Player {
+public class Player implements IPlayer {
 
     private String name;
     private int score = 0;
+
+    /**
+     * The strategy of this player.
+     */
+    private PlayerStrategy playerStrategy;
 
     /**
      * The hand of this player.
@@ -27,10 +36,19 @@ public class Player {
     /* -------------------------------------------------------------------------- */
 
     /**
-     * A basic constructor for a player.
+     * A basic constructor for a player,
+     * only requiring the name and creating a human player.
      */
     public Player(String name) {
+        this(name, PlayerType.HUMAN);
+    }
+
+    /**
+     * A basic constructor for a player.
+     */
+    public Player(String name, PlayerType playerType) {
         setName(name);
+        setPlayerStrategy(playerType);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -55,12 +73,12 @@ public class Player {
     }
 
     /**
-     * A method for playing a given card.
+     * A method for playing a given card object.
      *
-     * @throws IllegalArgumentException The given card isn't found in this hand.
+     * @throws IllegalArgumentException The given card isn't found in this hand or is not allowed.
      * @throws IllegalStateException    The hand is empty.
      */
-    public Card playCard(String card, Suit currentSuit) throws IllegalArgumentException, IllegalStateException {
+    public Card playCard(ICard card, Suit currentSuit) throws IllegalArgumentException, IllegalStateException {
         if (hand == null || hand.isEmpty()) {
             throw new IllegalStateException("Hand is empty, can't play a card.");
         }
@@ -123,6 +141,35 @@ public class Player {
         return player.matches("^[A-Za-z]+$");
     }
 
+    /**
+     * Chooses the bid to make. This is done using the strategy of the player.
+     * Only bot players will actually use this method.
+     *
+     * @param context Read-only view of the current round.
+     * @return The chosen bid type.
+     */
+    public BidType chooseBid(RoundContext context) {
+        return playerStrategy.chooseBid(hand, context);
+    }
+
+    /**
+     * Chooses the card to play. This is done using the strategy of the player.
+     * Only bot players will actually use this method.
+     *
+     * @param context Read-only view of the current round.
+     * @return The chosen card.
+     */
+    public ICard chooseCard(RoundContext context) {
+        return playerStrategy.chooseCard(hand, context);
+    }
+
+    /**
+     * Whether this strategy is autonomous (no human input needed).
+     */
+    public boolean isAutonomous() {
+        return playerStrategy.isAutonomous();
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                                 Getters                                    */
     /* -------------------------------------------------------------------------- */
@@ -142,52 +189,23 @@ public class Player {
     }
 
     /**
-     * A method for knowing if a Player
-     * requires some input from the CLI.
-     */
-    public boolean isAutonomous() {
-        return false;
-    }
-
-    /**
-     * A method for getting the bid from an autonomous player.
-     * By default, a player is not autonomous and this throws an exception.
-     *
-     * @throws UnsupportedOperationException if the player is not autonomous.
-     */
-    public BidType getAutonomousBid() {
-        throw new UnsupportedOperationException("This player is not autonomous and cannot bid automatically.");
-    }
-
-    /**
-     * A method for getting the card to play from an autonomous player.
-     * By default, a player is not autonomous and this throws an exception.
-     *
-     * @param leadSuit The suit currently leading the trick.
-     * @throws UnsupportedOperationException if the player is not autonomous.
-     */
-    public String findAutonomousCard(Suit leadSuit) {
-        throw new UnsupportedOperationException("This player is not autonomous and cannot play automatically.");
-    }
-
-    /**
      * A simple getter that finds the cards in this player's hand.
      */
-    public String[] getHandCards() {
-        if (hand == null) {
-            return new String[0];
-        }
-        return hand.getHandCards().toArray(String[]::new);
-    }
-
-    /**
-     * Returns the strings of all legally allowed cards given the trick's lead suit.
-     */
-    public ArrayList<String> getAllowedHandCards(Suit leadSuit) {
+    public ArrayList<ICard> getHandCards() {
         if (hand == null) {
             return new ArrayList<>();
         }
-        return hand.getAllowedHandCards(leadSuit);
+        return hand.getHandCards();
+    }
+
+    /**
+     * Returns all legally allowed cards for a given lead suit as domain objects.
+     */
+    public ArrayList<ICard> getAllowedHandCardsAsCards(Suit leadSuit) {
+        if (hand == null) {
+            return new ArrayList<>();
+        }
+        return hand.getAllowedHandCardsAsCards(leadSuit);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -197,15 +215,24 @@ public class Player {
     /**
      * A simple setter for setting of the name of this player.
      */
-    protected void setName(String name) {
+    private void setName(String name) {
         this.name = name;
     }
 
     /**
      * A simple setter for setting the score of this player.
      */
-    protected void setScore(int score) {
+    private void setScore(int score) {
         this.score = score;
     }
 
+    /**
+     * A setter for the strategy of a player given a player type.
+     */
+    private void setPlayerStrategy(PlayerType playerType) {
+        if (playerType == null) {
+            throw new IllegalArgumentException("PlayerType cannot be null.");
+        }
+        this.playerStrategy = playerType.getStrategy();
+    }
 }

@@ -1,6 +1,6 @@
 package whistapp.domain.round;
 
-import whistapp.domain.Interfaces.IScoreRound;
+import whistapp.domain.interfaces.IScoreRound;
 import whistapp.domain.bids.BidType;
 import whistapp.domain.players.Player;
 

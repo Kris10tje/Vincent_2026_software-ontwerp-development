@@ -1,19 +1,15 @@
 package whistapp.domain.game;
 
-import whistapp.domain.Interfaces.*;
+import whistapp.domain.interfaces.*;
 import whistapp.domain.bids.BidType;
 import whistapp.domain.cards.Suit;
-import whistapp.domain.players.BotDifficulty;
-import whistapp.domain.players.HighBot;
-import whistapp.domain.players.LowBot;
-import whistapp.domain.players.Player;
+import whistapp.domain.players.*;
 import whistapp.domain.round.PlayRound;
 
 import java.util.ArrayList;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class PlayGame extends Game<IPlayRound> implements IPlayGame {
 
@@ -32,9 +28,9 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
     /**
      * A constructor for creating a new game of PlayWhist.
      *
-     * @param players A map of players and their respective bot difficulty (null if human).
+     * @param players A map of players and their respective player type.
      */
-    public PlayGame(LinkedHashMap<String, BotDifficulty> players) {
+    public PlayGame(LinkedHashMap<String, PlayerType> players) {
         initializePlayers(players);
     }
 
@@ -64,8 +60,8 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      *
      * @param bidType The bid to submit.
      */
-    public void submitBid(String bidType, Suit newTrumpSuit) {
-        getCurrentRound().submitBid(bidFromString(bidType), newTrumpSuit);
+    public void submitBid(BidType bidType, Suit newTrumpSuit) {
+        getCurrentRound().submitBid(bidType, newTrumpSuit);
     }
 
     /**
@@ -100,7 +96,7 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      *
      * @param card The card played.
      */
-    public void processCardPlay(String card) {
+    public void processCardPlay(ICard card) {
         getCurrentRound().processCardPlay(card);
     }
 
@@ -128,76 +124,29 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      * A method for updating the scores based on the current round.
      */
     public void calculateAndUpdateScores() {
-        HashMap<String, Integer> tricksPerPlayerName = new HashMap<>();
+        HashMap<IPlayer, Integer> tricksPerIPlayer = new HashMap<>();
         HashMap<Player, Integer> tricksPerPlayer = getCurrentRound().getTricksWon();
         for (Player player : tricksPerPlayer.keySet()) {
-            tricksPerPlayerName.put(player.getName(), tricksPerPlayer.get(player));
+            tricksPerIPlayer.put(player, tricksPerPlayer.get(player));
         }
-        updateScores(tricksPerPlayerName);
+        updateScores(tricksPerIPlayer);
     }
 
-    public boolean bidRequiresTrumpDeclaration(String chosenBid) {
-        return PlayRound.requiresTrumpInput(BidType.fromString(chosenBid));
+    public boolean bidRequiresTrumpDeclaration(BidType chosenBid) {
+        return PlayRound.requiresTrumpInput(chosenBid);
     }
 
     /**
-     * Returns a string representation of the last completed trick.
-     * Dispatches to getCardsFromPreviousTrick().
+     * Returns the cards of the last completed trick in play order.
      */
-    public String getLastTrickString() {
-        LinkedHashMap<String, String> trick = getCardsFromPreviousTrick();
-        if (trick == null || trick.isEmpty()) {
-            return null; // Return null if there's no trick
-        }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Last trick (in order of play):\n");
-        for (HashMap.Entry<String, String> entry : trick.entrySet()) {
-            sb.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
-        }
-        return sb.toString();
+    public LinkedHashMap<IPlayer, ICard> getPreviousTrickCards() {
+        return transformPlayerMapToIPlayerMap(getCurrentRound().getCardsFromPreviousTrick());
     }
 
 
     /* -------------------------------------------------------------------------- */
     /*                               Private methods                              */
     /* -------------------------------------------------------------------------- */
-
-    /**
-     * A method to initialize the given players.
-     *
-     * @param playersMap A map of player names to their BotDifficulty. Null means human.
-     */
-    private void initializePlayers(HashMap<String, BotDifficulty> playersMap) {
-
-        // Check if the players can be initialized
-        validatePlayerInitialization(new ArrayList<>(playersMap.keySet()));
-
-        // Initialize the players using the explicit Creator pattern
-        for (HashMap.Entry<String, BotDifficulty> entry : playersMap.entrySet()) {
-            String name = entry.getKey();
-            BotDifficulty difficulty = entry.getValue();
-
-            if (difficulty == null) {
-                this.players.add(new Player(name));
-            } else {
-                switch (difficulty) {
-                    case LOW:
-                        this.players.add(new LowBot(name));
-                        break;
-                    case HIGH:
-                        this.players.add(new HighBot(name));
-                        break;
-                    default:
-                        throw new IllegalArgumentException("Unknown bot difficulty: " + difficulty);
-                }
-            }
-        }
-
-        // Initialize the player's scores
-        setAllScores(0);
-
-    }
 
     /**
      * A helper method for transforming incoming maps with
@@ -207,6 +156,30 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
         LinkedHashMap<String, T> result = new LinkedHashMap<>();
         for (HashMap.Entry<Player, T> entry : map.entrySet()) {
             result.put(entry.getKey().getName(), entry.getValue());
+        }
+        return result;
+    }
+
+    /**
+     * A helper method for transforming incoming maps with Player as a key
+     * into maps with IPlayer as a key to preserve abstraction boundaries.
+     */
+    private <T> LinkedHashMap<IPlayer, T> transformPlayerMapToIPlayerMap(LinkedHashMap<Player, T> map) {
+        LinkedHashMap<IPlayer, T> result = new LinkedHashMap<>();
+        for (HashMap.Entry<Player, T> entry : map.entrySet()) {
+            result.put(entry.getKey(), entry.getValue());
+        }
+        return result;
+    }
+
+    /**
+     * A helper method for transforming incoming maps with Player as a key
+     * into maps with IPlayer as a key to preserve abstraction boundaries.
+     */
+    private <T> HashMap<IPlayer, T> transformPlayerHashMapToIPlayerMap(HashMap<Player, T> map) {
+        HashMap<IPlayer, T> result = new HashMap<>();
+        for (HashMap.Entry<Player, T> entry : map.entrySet()) {
+            result.put(entry.getKey(), entry.getValue());
         }
         return result;
     }
@@ -236,7 +209,7 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      *
      * @return the string
      */
-    public String getExistingBids() {
+    public LinkedHashMap<IPlayer, BidType> getExistingBids() {
         return getCurrentRound().getExistingBids();
     }
 
@@ -253,67 +226,62 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
         return getCurrentRound().getFinalBid().getClass().getSimpleName();
     }
 
-    public String[] getFinalBidDeclarers() {
+    public IPlayer[] getFinalBidDeclarers() {
         if (getCurrentRound().getFinalBid() == null) {
-            return new String[0];
+            return new IPlayer[0];
         }
         return getCurrentRound().getFinalBid().getBidders().stream()
-                .map(Player::getName)
-                .toArray(String[]::new);
+                .map(p -> (IPlayer) p)
+                .toArray(IPlayer[]::new);
     }
 
-    public String[] getPossibleBidNames() {
-        BidType[] possibleBids = getCurrentRound().getPossibleBids();
-        String[] bidNames = new String[getCurrentRound().getPossibleBids().length];
-        for (int i  = 0; i < getCurrentRound().getPossibleBids().length; i++) {
-            bidNames[i] = possibleBids[i].toString();
-        }
-        return bidNames;
+    public IPlayer getCurrentPlayer() {
+        return getCurrentRound().getActivePlayer();
     }
 
-    public String getDealerName() {
-        return getCurrentRound().getDealer().getName();
+    public BidType[] getPossibleBids() {
+        return getCurrentRound().getPossibleBids();
     }
 
-    public LinkedHashMap<String, String> getCurrentTrickCardsAsStrings() {
-        LinkedHashMap<String, String> trickCards = new LinkedHashMap<>();
-        for (Map.Entry<Player, String> entry : getCurrentRound().getCurrentTrick().getCardsAsStrings().entrySet()) {
-            trickCards.put(entry.getKey().getName(), entry.getValue());
-        }
-        return trickCards;
+    public IPlayer getDealer() {
+        return getCurrentRound().getDealer();
     }
 
-    public String[] getAllowedCardsForCurrentPlayer() {
+    public LinkedHashMap<IPlayer, ICard> getCurrentTrickCards() {
+        return transformPlayerMapToIPlayerMap(getCurrentRound().getCardsInTrick());
+    }
+
+    public ArrayList<ICard> getAllowedCardsForCurrentPlayer() {
         return getCurrentRound().getAllowedCardsForCurrentPlayer();
     }
 
-    public String getTrumpSuitName() {
-        return getCurrentRound().getTrumpSuitName();
+    public Suit getTrumpSuit() {
+        return getCurrentRound().getTrumpSuit();
     }
 
-    public String getOriginalTrumpSuitName() {
-        return getCurrentRound().getOriginalTrumpSuitName();
+    public Suit getOriginalTrumpSuit() {
+        return getCurrentRound().getOriginalTrumpSuit();
     }
 
-    public String getCurrentTrickWinnerName() {
-        return getCurrentRound().getCurrentTrickWinnerName();
+    public IPlayer getCurrentTrickWinner() {
+        return getCurrentRound().getCurrentTrickWinner();
     }
 
     /**
      * A getter finding the round scores for each of the players of the game.
      */
-    public HashMap<String, Integer> getRoundScoresPerPlayer() {
+    public HashMap<IPlayer, Integer> getRoundScoresPerPlayer() {
         // Create a map for the scores
-        HashMap<String, Integer> scoresPerPlayerName = new HashMap<>();
+        HashMap<IPlayer, Integer> scoresPerIPlayer = new HashMap<>();
         HashMap<Player, Integer> scoresPerPlayer = getCurrentRound().processRoundOutcome(getCurrentRound().getTricksWon());
 
         // Add the scores to the map
         for (Player player : scoresPerPlayer.keySet()) {
-            scoresPerPlayerName.put(player.getName(), scoresPerPlayer.get(player));
+            scoresPerIPlayer.put(player, scoresPerPlayer.get(player));
         }
 
         // Return the map
-        return scoresPerPlayerName;
+        return scoresPerIPlayer;
     }
 
     /**
@@ -322,30 +290,20 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      *
      * @return The name of the active player.
      */
-    public String getActivePlayerName() {
-        return getCurrentRound().getActivePlayerName();
+    public IPlayer getActivePlayer() {
+        return getCurrentRound().getActivePlayer();
     }
 
     /**
      * A getter for the cards of the specified player.
      *
-     * @return The cards of the specified player, as a list of Strings.
+     * @return The cards of the specified player, as a list of ICards.
      */
-    public String[] getPlayerCards(String playerName) {
-        Player player = getPlayerByName(playerName);
+    public ArrayList<ICard> getCardsByPlayer(IPlayer player) {
         if (player == null) {
-            throw new IllegalArgumentException("Player not found: " + playerName);
+            throw new IllegalArgumentException("Player cannot be null");
         }
-        return player.getHandCards();
-    }
-
-    /**
-     * Gets the cards of the currently active player.
-     *
-     * @return An array containing the string representations of every card in the active players hand.
-     */
-    public String[] getPlayerCards() {
-        return getPlayerCards(getActivePlayerName());
+        return ((Player) player).getHandCards();
     }
 
     /**
@@ -362,8 +320,8 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      *
      * @return The last dealt card in the current round as a string
      */
-    public String getLastDealtCard() {
-        return getCurrentRound().getLastDealtCard().toString();
+    public ICard getLastDealtCard() {
+        return getCurrentRound().getLastDealtCard();
     }
 
     /**
@@ -373,7 +331,12 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      * @return A map playerName -> cardString
      */
     public HashMap<String, String> getCurrentRoundCurrentTrickCards() {
-        return transformPlayerMapToPlayerNames(getCurrentRound().getCardsInTrick());
+        HashMap<String, String> result = new HashMap<>();
+        LinkedHashMap<Player, ICard> cardsInTrick = getCurrentRound().getCardsInTrick();
+        for (Player player : cardsInTrick.keySet()) {
+            result.put(player.getName(), cardsInTrick.get(player).toString());
+        }
+        return result;
     }
 
     /**
@@ -384,7 +347,16 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      * never containing currentPlayer as playerName
      */
     public HashMap<String, String[]> getOpenMiserieHands(String currentPlayer) {
-        return transformPlayerMapToPlayerNames(getCurrentRound().getOpenMiserieHands(getPlayerByName(currentPlayer)));
+        HashMap<String, String[]> result = new HashMap<>();
+        HashMap<Player, ArrayList<ICard>> hands = getCurrentRound().getOpenMiserieHands(getPlayerByName(currentPlayer));
+        for (Player player : hands.keySet()) {
+            String[] cards = new String[hands.get(player).size()];
+            for (int i = 0; i < hands.get(player).size(); i++) {
+                cards[i] = hands.get(player).get(i).toString();
+            }
+            result.put(player.getName(), cards);
+        }
+        return result;
     }
     
     /**
@@ -392,8 +364,8 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      *
      * @return A map of player names and their hands.
      */
-    public HashMap<String, String[]> getOpenMiserieHands() {
-        return transformPlayerMapToPlayerNames(getCurrentRound().getOpenMiserieHands(getPlayerByName(getActivePlayerName())));
+    public HashMap<IPlayer, ArrayList<ICard>> getOpenMiserieHands() {
+        return transformPlayerHashMapToIPlayerMap(getCurrentRound().getOpenMiserieHands((Player) getActivePlayer()));
     }
 
     /**
@@ -404,7 +376,12 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      * @return A map playerName -> cardString
      */
     public LinkedHashMap<String, String> getCardsFromPreviousTrick() {
-        return transformPlayerMapToPlayerNames(getCurrentRound().getCardsFromPreviousTrick());
+        LinkedHashMap<String, String> result = new LinkedHashMap<>();
+        LinkedHashMap<Player, ICard> cards = getCurrentRound().getCardsFromPreviousTrick();
+        for (Player player : cards.keySet()) {
+            result.put(player.getName(), cards.get(player).toString());
+        }
+        return result;
     }
 
     /**
@@ -425,16 +402,16 @@ public class PlayGame extends Game<IPlayRound> implements IPlayGame {
      * Returns the string of the name of the lone proposer.
      * @return the name
      */
-    public String getLoneProposerName() {
-        return getCurrentRound().getLoneProposerName();
+    public IPlayer getLoneProposer() {
+        return getCurrentRound().getLoneProposer();
     }
 
     /**
      * Processes the lone proposer to play a proposal alone bid.
      * @param proposer The proposer to register.
      */
-    public void registerLoneProposer(String proposer) {
-        getCurrentRound().registerLoneProposer(getPlayerByName(proposer));
+    public void registerLoneProposer(IPlayer proposer) {
+        getCurrentRound().registerLoneProposer((Player) proposer);
     }
 
 }

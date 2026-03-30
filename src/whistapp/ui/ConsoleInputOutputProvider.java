@@ -2,7 +2,7 @@ package whistapp.ui;
 
 import java.util.Scanner;
 
-public class ConsoleInputOutputProvider implements InputOutputProvider{
+public class ConsoleInputOutputProvider implements IInputOutputProvider{
     private final Scanner scanner = new Scanner(System.in);
 
     @Override
