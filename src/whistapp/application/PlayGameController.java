@@ -34,6 +34,7 @@ public class PlayGameController extends GameController<IPlayGame> implements IPl
         return game.getPreviousTrickCards();
     }
 
+    //TODO bekijken om te verwijderen
     public void submitBid(BidType bidType, Suit newTrumpSuit) {
         game.submitBid(bidType, newTrumpSuit);
     }
@@ -50,6 +51,7 @@ public class PlayGameController extends GameController<IPlayGame> implements IPl
         return game.getFinalBidDeclarers();
     }
 
+    //TODO bekijken om te verwijderen
     public BidType[] getPossibleBids() {
         return game.getPossibleBids();
     }
@@ -84,6 +86,7 @@ public class PlayGameController extends GameController<IPlayGame> implements IPl
      * @param player The player.
      * @return the list of cards held by the player, sorted.
      */
+    //TODO bekijken om te verwijderen
     public ArrayList<ICard> getCardsByPlayer(IPlayer player) {
 
         // Get ICard interfaces from domain layer
@@ -91,6 +94,7 @@ public class PlayGameController extends GameController<IPlayGame> implements IPl
 
         // Sort cards (this shouldn't happen in the domain layer, because
         // it is only of interest for showing it to the user in the CLI).
+        //TODO move the sorting to the UI!!!
         Card.sortCards(cards);
 
         return cards;
@@ -104,12 +108,14 @@ public class PlayGameController extends GameController<IPlayGame> implements IPl
      * 
      * @return the list of cards held by the current player, sorted
      */
+    //TODO bekijken om te verwijderen
     public ArrayList<ICard> getCardsForCurrentPlayer() {
         IPlayer currentPlayer = game.getCurrentPlayer();
         // Use the method above
         return getCardsByPlayer(currentPlayer);
     }
 
+    //TODO bekijken om te verwijderen
     public HashMap<IPlayer, ArrayList<ICard>> getOpenMiserieHands() {
         return game.getOpenMiserieHands();
     }
@@ -118,22 +124,34 @@ public class PlayGameController extends GameController<IPlayGame> implements IPl
         return game.isAutonomous(playerIndex);
     }
 
+    //TODO bekijken om te verwidjeren
     public void proceedAutonomousBid() {
         game.proceedAutonomousBid();
     }
 
+    //TODO bekijken om te verwidjeren
     public void processAutonomousCardPlay() {
         game.processAutonomousCardPlay();
+    }
+
+    public void currentPlayerChooseCard(){
+        game.currentPlayerChooseCard();
+    }
+
+    public void currentPlayerChooseBid(){
+        game.currentPlayerChooseBid();
     }
 
     public HashMap<IPlayer, Integer> getRoundScoresPerPlayer() {
         return game.getRoundScoresPerPlayer();
     }
 
+    //TODO bekijken om deze te verwijderen
     public LinkedHashMap<IPlayer, ICard> getCurrentTrickCards() {
         return game.getCurrentTrickCards();
     }
 
+    //TODO bekijken om deze te verwijderen
     public ArrayList<ICard> getAllowedCardsForCurrentPlayer() {
         return game.getAllowedCardsForCurrentPlayer();
     }
@@ -154,6 +172,7 @@ public class PlayGameController extends GameController<IPlayGame> implements IPl
         return game.getActivePlayer();
     }
 
+    //TODO bekijken om deze te verwijderen
     public ICard getLastDealtCard() {
         return game.getLastDealtCard();
     }
@@ -162,6 +181,7 @@ public class PlayGameController extends GameController<IPlayGame> implements IPl
         return game.bidRequiresTrumpDeclaration(chosenBid);
     }
 
+    //TODO bekijken om deze te verwijderen
     public LinkedHashMap<IPlayer, BidType> getExistingBids() {
         return game.getExistingBids();
     }

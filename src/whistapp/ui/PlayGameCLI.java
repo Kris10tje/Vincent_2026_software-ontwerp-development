@@ -2,9 +2,11 @@ package whistapp.ui;
 
 import whistapp.application.interfaces.*;
 import whistapp.domain.bids.BidType;
+import whistapp.domain.bids.BidTypeWithTrump;
 import whistapp.domain.cards.Suit;
 import whistapp.domain.interfaces.ICard;
 import whistapp.domain.interfaces.IPlayer;
+import whistapp.domain.interfaces.IPlayerInputProvider;
 import whistapp.domain.players.PlayerType;
 
 import java.util.*;
@@ -12,7 +14,7 @@ import java.util.*;
 /**
  * CLI for playing a virtual game of Whist.
  */
-public class PlayGameCLI extends GameCLI<IPlayGameController> {
+public class PlayGameCLI extends GameCLI<IPlayGameController>  implements IPlayerInputProvider {
 
     /* -------------------------------------------------------------------------- */
     /*                                Constructors                                */
@@ -197,6 +199,44 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
         specificGameController.calculateAndUpdateScores();
     }
 
+    public BidTypeWithTrump chooseBid(ICard lastDealtCard, ArrayList<ICard> cardsForCurrentPlayer, HashMap<IPlayer, ArrayList<ICard>> openMiserieHands,
+        LinkedHashMap<IPlayer, BidType> existingBids,  BidType[] possibleBids){
+        getReady();
+
+        // Get a valid bid from the active player
+        while (true) {
+
+            try {
+
+                // Show the last dealt card (always dealt face up, to show what the trump will be for some bids)
+                showLastDealtCard(lastDealtCard);
+
+                // Show all existing bids
+                showExistingBids(existingBids);
+
+                // Show the players (that already bid open miserie) their hands
+                showOpenMiserieHands(openMiserieHands);
+
+                // Show the active player's hand to help them make a decision on their bid
+                showHand(cardsForCurrentPlayer);
+
+                // Get the bid choice
+                BidType chosenBid = getChoice("Choose your bid", possibleBids);
+                if (specificGameController.bidRequiresTrumpDeclaration(chosenBid)) {
+                    return new BidTypeWithTrump(chosenBid, getChoice("Choose your preferred trump suit", controller.getSuits()));
+                } else {
+                    return new BidTypeWithTrump(chosenBid, null);
+                }
+
+
+            } catch (Exception e) {
+                clearScreen();
+                ioProvider.writeLine("Error: " + e.getMessage() + "\nPlease try again.");
+            }
+
+        }
+    }
+
     /**
      * Run the bidding phase until bidding stabilizes.
      */
@@ -208,51 +248,20 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
             // Loop until we have a valid final (winning) bid
             while (!specificGameController.biddingStabilised()) {
 
+                //handle the bid strategy
+                specificGameController.currentPlayerChooseBid();
+
+                //niet meer nodig omdat alle players nu via de strategy werken
                 // Pass to the next player
-                int activePlayerIndex = specificGameController.getActivePlayerIndex();
+                //int activePlayerIndex = specificGameController.getActivePlayerIndex();
 
                 // Check if player is a bot
-                if (specificGameController.isAutonomous(activePlayerIndex)) {
-                    specificGameController.proceedAutonomousBid();
-                    continue;
-                }
+                //if (specificGameController.isAutonomous(activePlayerIndex)) {
+                //    specificGameController.proceedAutonomousBid();
+                //    continue;
+                //}
 
-                getReady();
-
-                // Get a valid bid from the active player
-                while (true) {
-
-                    try {
-
-                        // Show the last dealt card (always dealt face up, to show what the trump will be for some bids)
-                        showLastDealtCard();
-
-                        // Show all existing bids
-                        showExistingBids();
-
-                        // Show the players (that already bid open miserie) their hands
-                        showOpenMiserieHands();
-
-                        // Show the active player's hand to help them make a decision on their bid
-                        showHand();
-
-                        // Get the bid choice
-                        BidType chosenBid = getChoice("Choose your bid", specificGameController.getPossibleBids());
-                        if (specificGameController.bidRequiresTrumpDeclaration(chosenBid)) {
-                            specificGameController.submitBid(chosenBid, getChoice("Choose your preferred trump suit", controller.getSuits()));
-                        } else {
-                            specificGameController.submitBid(chosenBid, null);
-                        }
-
-                        // Stop the loop and pass to the next player
-                        break;
-
-                    } catch (Exception e) {
-                        clearScreen();
-                        ioProvider.writeLine("Error: " + e.getMessage() + "\nPlease try again.");
-                    }
-
-                }
+                //code moved to choosebid
 
             }
 
@@ -281,11 +290,10 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
     /**
      * Show all existing bids made by players.
      */
-    private void showExistingBids() {
+    private void showExistingBids(LinkedHashMap<IPlayer, BidType> existingBids) {
         ioProvider.writeLine("Currently active bids:");
-        LinkedHashMap<IPlayer, BidType> bids = specificGameController.getExistingBids();
-        for (IPlayer player : bids.keySet()) {
-            ioProvider.writeLine(" - " + player.getName() + ": " + bids.get(player));
+        for (IPlayer player : existingBids.keySet()) {
+            ioProvider.writeLine(" - " + player.getName() + ": " + existingBids.get(player));
         }
     }
 
@@ -326,6 +334,105 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
         informUser("It's " + specificGameController.getActivePlayer().getName() + "'s turn.");
     }
 
+    //this method should be in the interface IPlayerInputProvider and will be called by the humanstrategy.
+    public ICard chooseCard(Suit originalTrump, Suit activeTrump, LinkedHashMap<IPlayer, ICard> cardsOnTable, ArrayList<ICard> cardsForCurrentPlayer, ArrayList<ICard> allowedCardsForCurrentPlayer,
+        HashMap<IPlayer, ArrayList<ICard>> openMiserieHands){
+        getReady();
+
+        // Show what's currently on the table (cards played by bots before this turn)
+        if (!cardsOnTable.isEmpty()) {
+            ioProvider.writeLine("Cards on the table (in order of play):");
+            for (java.util.Map.Entry<IPlayer, ICard> entry : cardsOnTable.entrySet()) {
+                ioProvider.writeLine("  " + entry.getKey().getName() + ": " + CardFormatter.formatCard(entry.getValue()));
+            }
+            ioProvider.writeLine("");
+        }
+
+        // Show the trump suits for this round.
+        // The original trump is always shown. For Abondance, the active trump
+        // may differ or not yet be known (chosen by first card play).
+        if (originalTrump != null) {
+            ioProvider.writeLine("Original trump: " + CardFormatter.formatCardSuit(originalTrump));
+        }
+        if (activeTrump == null) {
+            // This is a bid that doesn't have a trump (e.g. Miserie)
+            ioProvider.writeLine("Active trump:   None");
+        } else if (!activeTrump.equals(originalTrump)) {
+            ioProvider.writeLine("Active trump:   " + CardFormatter.formatCardSuit(activeTrump) + " (chosen by bid declarer)");
+        }
+        // If active trump equals original trump, no extra line is needed.
+        ioProvider.writeLine("");
+
+        // Show the hands of the open miserie players
+        showOpenMiserieHands(openMiserieHands);
+
+        // Show the active player's hand
+        showHand(cardsForCurrentPlayer);
+
+        // Build the set of legally allowed cards
+        Set<String> allowedCards = new HashSet<>();
+        for (ICard card : allowedCardsForCurrentPlayer) {
+            allowedCards.add(CardFormatter.formatCard(card));
+        }
+
+        // Get a valid card choice from the active player
+        while (true) {
+
+            try {
+
+                // Build the annotated choices: ★ prefix for legal cards
+                String[] choices = new String[cardsForCurrentPlayer.size() + 1];
+                for (int i = 0; i < cardsForCurrentPlayer.size(); i++) {
+                    String formattedCard = CardFormatter.formatCard(cardsForCurrentPlayer.get(i));
+                    choices[i] = allowedCards.contains(formattedCard)
+                            ? "★ " + formattedCard
+                            : formattedCard;
+                }
+                choices[choices.length - 1] = "View Last Trick";
+
+                // Get the choice
+                String chosenCard = getChoice("Choose which card to play", choices);
+
+                if (chosenCard.equals("View Last Trick")) {
+                    try {
+                        showLastTrick();
+                    } catch (Exception e) {
+                        ioProvider.writeLine("Error viewing last trick: " + e.getMessage());
+                    }
+                    getInputString("Press enter to return.");
+                    clearScreen();
+                    continue;
+                }
+
+                // Strip the ★ prefix before registering
+                String cardToPlay = chosenCard.startsWith("★ ") ? chosenCard.substring(2) : chosenCard;
+
+                ICard selectedCard = null;
+                for (ICard card : cardsForCurrentPlayer) {
+                    if (CardFormatter.formatCard(card).equals(cardToPlay)) {
+                        selectedCard = card;
+                        break;
+                    }
+                }
+                if (selectedCard == null) {
+                    throw new IllegalArgumentException("Selected card could not be found in hand.");
+                }
+
+                // Register the card play with the controller
+                return selectedCard;
+
+            } catch (Exception e) {
+                ioProvider.writeLine("Error: " + e.getMessage() + "\nPlease try again.");
+            }
+            finally {
+                // Advance the turn
+                clearScreen();
+            }
+        }
+
+        
+    }
+
     /**
      * Play a single trick.
      *
@@ -337,114 +444,20 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
 
         while (!specificGameController.isTrickOver()) {
 
+            //this is the only line that should be here for both bots and human players.
+            specificGameController.currentPlayerChooseCard();
+
+            //TODO these lines should all be eliminated
             // Make sure the next player is ready
-            int activePlayerIndex = specificGameController.getActivePlayerIndex();
+            /*int activePlayerIndex = specificGameController.getActivePlayerIndex();
 
             // Check if player is a bot
             if (specificGameController.isAutonomous(activePlayerIndex)) {
                 specificGameController.processAutonomousCardPlay();
                 continue;
-            }
+            }*/
 
-            getReady();
-
-            // Show what's currently on the table (cards played by bots before this turn)
-            LinkedHashMap<IPlayer, ICard> trickCards = specificGameController.getCurrentTrickCards();
-            if (!trickCards.isEmpty()) {
-                ioProvider.writeLine("Cards on the table (in order of play):");
-                for (java.util.Map.Entry<IPlayer, ICard> entry : trickCards.entrySet()) {
-                    ioProvider.writeLine("  " + entry.getKey().getName() + ": " + CardFormatter.formatCard(entry.getValue()));
-                }
-                ioProvider.writeLine("");
-            }
-
-            // Show the trump suits for this round.
-            // The original trump is always shown. For Abondance, the active trump
-            // may differ or not yet be known (chosen by first card play).
-            Suit originalTrump = specificGameController.getOriginalTrumpSuit();
-            Suit activeTrump = specificGameController.getTrumpSuit();
-            if (originalTrump != null) {
-                ioProvider.writeLine("Original trump: " + CardFormatter.formatCardSuit(originalTrump));
-            }
-            if (activeTrump == null) {
-                // This is a bid that doesn't have a trump (e.g. Miserie)
-                ioProvider.writeLine("Active trump:   None");
-            } else if (!activeTrump.equals(originalTrump)) {
-                ioProvider.writeLine("Active trump:   " + CardFormatter.formatCardSuit(activeTrump) + " (chosen by bid declarer)");
-            }
-            // If active trump equals original trump, no extra line is needed.
-            ioProvider.writeLine("");
-
-            // Show the hands of the open miserie players
-            showOpenMiserieHands();
-
-            // Show the active player's hand
-            showHand();
-
-            // Build the set of legally allowed cards
-            Set<String> allowedCards = new HashSet<>();
-            for (ICard card : specificGameController.getAllowedCardsForCurrentPlayer()) {
-                allowedCards.add(CardFormatter.formatCard(card));
-            }
-
-            // Get a valid card choice from the active player
-            while (true) {
-
-                try {
-
-                    // Build the annotated choices: ★ prefix for legal cards
-                    ArrayList<ICard> originalCards = specificGameController.getCardsForCurrentPlayer();
-                    String[] choices = new String[originalCards.size() + 1];
-                    for (int i = 0; i < originalCards.size(); i++) {
-                        String formattedCard = CardFormatter.formatCard(originalCards.get(i));
-                        choices[i] = allowedCards.contains(formattedCard)
-                                ? "★ " + formattedCard
-                                : formattedCard;
-                    }
-                    choices[choices.length - 1] = "View Last Trick";
-
-                    // Get the choice
-                    String chosenCard = getChoice("Choose which card to play", choices);
-
-                    if (chosenCard.equals("View Last Trick")) {
-                        try {
-                            showLastTrick();
-                        } catch (Exception e) {
-                            ioProvider.writeLine("Error viewing last trick: " + e.getMessage());
-                        }
-                        getInputString("Press enter to return.");
-                        clearScreen();
-                        continue;
-                    }
-
-                    // Strip the ★ prefix before registering
-                    String cardToPlay = chosenCard.startsWith("★ ") ? chosenCard.substring(2) : chosenCard;
-
-                    ICard selectedCard = null;
-                    for (ICard card : originalCards) {
-                        if (CardFormatter.formatCard(card).equals(cardToPlay)) {
-                            selectedCard = card;
-                            break;
-                        }
-                    }
-                    if (selectedCard == null) {
-                        throw new IllegalArgumentException("Selected card could not be found in hand.");
-                    }
-
-                    // Register the card play with the controller
-                    specificGameController.processCardPlay(selectedCard);
-
-                    // Stop the loop and pass to the next player
-                    break;
-
-                } catch (Exception e) {
-                    clearScreen();
-                    ioProvider.writeLine("Error: " + e.getMessage() + "\nPlease try again.");
-                }
-            }
-
-            // Advance the turn
-            clearScreen();
+            //code here is moved to chooseCard and will be called from the human strategy
 
         }
     }
@@ -452,8 +465,8 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
     /**
      * Display the hand of the active player.
      */
-    private void showHand() {
-        showHand("Your Hand:", specificGameController.getCardsForCurrentPlayer());
+    private void showHand(ArrayList<ICard> cardsForCurrentPlayer) {
+        showHand("Your Hand:", cardsForCurrentPlayer);
     }
 
     /**
@@ -485,12 +498,12 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
     /**
      * Displays the hands of the open miserie players.
      */
-    private void showOpenMiserieHands() {
-        HashMap<IPlayer, ArrayList<ICard>> cards = specificGameController.getOpenMiserieHands();
+    private void showOpenMiserieHands(HashMap<IPlayer, ArrayList<ICard>> openMiserieHands) {
+        openMiserieHands = specificGameController.getOpenMiserieHands();
 
-        if (cards.isEmpty()) return;
-        for (IPlayer player : cards.keySet()) {
-            showHand(player.getName() + "'s Hand (Open Miserie):", cards.get(player));
+        if (openMiserieHands.isEmpty()) return;
+        for (IPlayer player : openMiserieHands.keySet()) {
+            showHand(player.getName() + "'s Hand (Open Miserie):", openMiserieHands.get(player));
         }
     }
 
@@ -521,8 +534,8 @@ public class PlayGameCLI extends GameCLI<IPlayGameController> {
     /**
      * Shows the last dealt card, which is always dealt face up and determines the trump for some bids.
      */
-    protected void showLastDealtCard() {
-        ioProvider.writeLine("Last dealt card this round: " + CardFormatter.formatCard(specificGameController.getLastDealtCard()) + "\n");
+    protected void showLastDealtCard(ICard lastDealtCard) {
+        ioProvider.writeLine("Last dealt card this round: " + CardFormatter.formatCard(lastDealtCard) + "\n");
     }
 
     /**

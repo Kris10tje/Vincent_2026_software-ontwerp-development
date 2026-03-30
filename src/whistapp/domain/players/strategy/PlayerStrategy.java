@@ -1,9 +1,11 @@
 package whistapp.domain.players.strategy;
 
 import whistapp.domain.bids.BidType;
+import whistapp.domain.bids.BidTypeWithTrump;
 import whistapp.domain.cards.Hand;
 import whistapp.domain.interfaces.ICard;
-import whistapp.domain.round.RoundContext;
+import whistapp.domain.round.Context.BidContext;
+import whistapp.domain.round.Context.RoundContext;
 
 import java.util.ArrayList;
 
@@ -17,7 +19,7 @@ public interface PlayerStrategy {
      * @param context Read-only view of the current round.
      * @return The chosen bid type.
      */
-    BidType chooseBid(Hand hand, RoundContext context);
+    BidTypeWithTrump chooseBid(Hand hand, BidContext context);
 
     /**
      * Choose which card to play.

@@ -1,7 +1,8 @@
 package whistapp.domain.interfaces;
 
-import whistapp.domain.bids.BidType;
-import whistapp.domain.round.RoundContext;
+import whistapp.domain.bids.BidTypeWithTrump;
+import whistapp.domain.round.Context.BidContext;
+import whistapp.domain.round.Context.RoundContext;
 
 public interface IPlayer {
 
@@ -12,7 +13,7 @@ public interface IPlayer {
 	 * @param context Read-only view of the current round.
 	 * @return The chosen bid type.
 	 */
-	BidType chooseBid(RoundContext context);
+	BidTypeWithTrump chooseBid(BidContext context);
 
 	/**
 	 * Choose which card to play.

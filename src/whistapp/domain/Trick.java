@@ -156,7 +156,7 @@ public class Trick{
     /**
      * A simple getter for finding the cards played per player.
      */
-    public LinkedHashMap<Player, ICard> getCards() {
+    public LinkedHashMap<Player, ICard> getPlayedCards() {
         return new LinkedHashMap<>(playedCards);
     }
 

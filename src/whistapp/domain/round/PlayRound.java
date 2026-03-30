@@ -1,5 +1,6 @@
 package whistapp.domain.round;
 
+import whistapp.domain.Transformer;
 import whistapp.domain.Trick;
 import whistapp.domain.interfaces.IPlayRound;
 import whistapp.domain.bids.Abondance;
@@ -11,6 +12,8 @@ import whistapp.domain.game.Game;
 import whistapp.domain.interfaces.ICard;
 import whistapp.domain.interfaces.IPlayer;
 import whistapp.domain.players.Player;
+import whistapp.domain.round.Context.BidContext;
+import whistapp.domain.round.Context.RoundContext;
 
 import java.util.*;
 
@@ -87,6 +90,7 @@ public class PlayRound extends Round implements IPlayRound {
     /**
      * A method for processing the bid of an autonomous player.
      */
+    //TODO bekijken om te verwijderen
     public void proceedAutonomousBid() {
 
         // Check if user input is required. If it is, we can't play autonomously!
@@ -95,10 +99,17 @@ public class PlayRound extends Round implements IPlayRound {
         }
 
         // Get the autonomous bid
-        BidType autonomousBid = getCurrentBiddingPlayer().chooseBid(getRoundContext());
+        var bid = getCurrentBiddingPlayer().chooseBid(getBidContext());
 
         // Submit the bid
-        submitBid(autonomousBid, null);
+        submitBid(bid.bidType(), bid.newSuit());
+    }
+    public void currentPlayerChooseBid(){
+        // Get the autonomous bid
+        var bid = getCurrentBiddingPlayer().chooseBid(getBidContext());
+
+        // Submit the bid
+        submitBid(bid.bidType(), bid.newSuit());
     }
 
     /**
@@ -279,10 +290,18 @@ public class PlayRound extends Round implements IPlayRound {
     /**
      * A method for processing the autonomous playing of a card in the current trick.
      */
+    //TODO bekijken om te verwijderen
     public void processAutonomousCardPlay() {
         if (!getCurrentPlayingPlayer().isAutonomous()) {
             throw new IllegalStateException("Player is not a BotPlayer");
         }
+        // Find the played card by this bot
+        ICard playedCard = getCurrentPlayingPlayer().chooseCard(getRoundContext());
+        // Play the card
+        processCardPlay(playedCard);
+    }
+
+    public void currentPlayerChooseCard(){
         // Find the played card by this bot
         ICard playedCard = getCurrentPlayingPlayer().chooseCard(getRoundContext());
         // Play the card
@@ -405,15 +424,17 @@ public class PlayRound extends Round implements IPlayRound {
      * A simple getter for the current round context of this round.
      */
     private RoundContext getRoundContext() {
-        RoundContext roundContext;
-        if (isBiddingPhase()) {
-            // We're still in the bidding phase, the playing phase variables can be set to null
-            roundContext = new RoundContext(activeTrumpSuit, null);
-        } else {
-            // We're in the playing phase
-            roundContext = new RoundContext(activeTrumpSuit, getCurrentTrick().getLeadSuit());
-        }
-        return roundContext;
+        var openMiseriehands = Transformer.transformPlayerHashMapToIPlayerMap(getOpenMiserieHandsForCurrentPlayer());
+        var playedCards = Transformer.transformPlayerMapToIPlayerMap(getCurrentTrick().getPlayedCards());
+        var handCards = getHandCardsForCurrentPlayer();
+        return new RoundContext(activeTrumpSuit, getCurrentTrick().getLeadSuit(), playedCards, 
+        handCards,  getAllowedCardsForCurrentPlayer(), openMiseriehands);
+    }
+
+    private BidContext getBidContext(){
+        var openMiseriehands = Transformer.transformPlayerHashMapToIPlayerMap(getOpenMiserieHandsForCurrentPlayer());
+        var handCards = getHandCardsForCurrentPlayer();
+        return new BidContext(handCards, openMiseriehands, getLastDealtCard(), getExistingBids(), getPossibleBids());
     }
 
     /* -------------------------------------------------------------------------- */
@@ -485,8 +506,9 @@ public class PlayRound extends Round implements IPlayRound {
     /**
      * A getter for the cards in this trick.
      */
+    //TODO bekijken om deze te verwijderen
     public LinkedHashMap<Player, ICard> getCardsInTrick() {
-        return getCurrentTrick().getCards();
+        return getCurrentTrick().getPlayedCards();
     }
 
     /**
@@ -518,6 +540,14 @@ public class PlayRound extends Round implements IPlayRound {
     public ArrayList<ICard> getAllowedCardsForCurrentPlayer() {
         Suit leadSuit = getCurrentTrick().getLeadSuit();
         return getCurrentPlayingPlayer().getAllowedHandCardsAsCards(leadSuit);
+    }
+
+    public ArrayList<ICard> getHandCardsForCurrentPlayer(){
+        return getCurrentPlayingPlayer().getHandCards();
+    }
+
+    public HashMap<Player, ArrayList<ICard>> getOpenMiserieHandsForCurrentPlayer(){
+        return getOpenMiserieHands(getCurrentPlayingPlayer());
     }
 
     /**
@@ -596,7 +626,7 @@ public class PlayRound extends Round implements IPlayRound {
         if (tricks.size() <= 1) {
             throw new IllegalStateException("There is no previous trick to show.");
         }
-        return tricks.get(tricks.size() - 2).getCards();
+        return tricks.get(tricks.size() - 2).getPlayedCards();
     }
 
     /**

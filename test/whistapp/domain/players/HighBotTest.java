@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import whistapp.domain.interfaces.ICard;
 import whistapp.domain.players.strategy.HighBotStrategy;
-import whistapp.domain.round.RoundContext;
+import whistapp.domain.round.Context.RoundContext;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;

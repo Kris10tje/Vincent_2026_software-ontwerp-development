@@ -3,13 +3,15 @@ package whistapp.domain.players;
 import java.util.HashSet;
 
 import whistapp.domain.bids.BidType;
+import whistapp.domain.bids.BidTypeWithTrump;
 import whistapp.domain.cards.Card;
 import whistapp.domain.cards.Hand;
 import whistapp.domain.cards.Suit;
 import whistapp.domain.interfaces.ICard;
 import whistapp.domain.interfaces.IPlayer;
 import whistapp.domain.players.strategy.PlayerStrategy;
-import whistapp.domain.round.RoundContext;
+import whistapp.domain.round.Context.BidContext;
+import whistapp.domain.round.Context.RoundContext;
 
 import java.util.ArrayList;
 
@@ -152,7 +154,7 @@ public class Player implements IPlayer {
      * @param context Read-only view of the current round.
      * @return The chosen bid type.
      */
-    public BidType chooseBid(RoundContext context) {
+    public BidTypeWithTrump chooseBid(BidContext context) {
         return playerStrategy.chooseBid(hand, context);
     }
 

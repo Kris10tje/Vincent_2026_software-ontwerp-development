@@ -1,16 +1,18 @@
 package whistapp.domain.players.strategy;
 
 import whistapp.domain.bids.BidType;
+import whistapp.domain.bids.BidTypeWithTrump;
 import whistapp.domain.cards.Hand;
 import whistapp.domain.interfaces.ICard;
-import whistapp.domain.round.RoundContext;
+import whistapp.domain.round.Context.BidContext;
+import whistapp.domain.round.Context.RoundContext;
 
 public class HighBotStrategy implements PlayerStrategy {
 
     /*zijn deze overrides nodig?? */
     //@Override
-    public BidType chooseBid(Hand hand, RoundContext context) {
-        return BidType.PASS;
+    public BidTypeWithTrump chooseBid(Hand hand, BidContext context) {
+        return new BidTypeWithTrump(BidType.PASS, null);
     }
 
     //@Override

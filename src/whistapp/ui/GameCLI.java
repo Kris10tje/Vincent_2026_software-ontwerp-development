@@ -10,7 +10,7 @@ import whistapp.domain.interfaces.IPlayerInputProvider;
  * Base CLI for game modes that run a Whist game loop.
  *
  */
-public abstract class GameCLI<TGame extends IGameController> extends CLI implements IPlayerInputProvider {
+public abstract class GameCLI<TGame extends IGameController> extends CLI  {
 
     // TGame is the type of controller (i.e. the interface type that
     // extends IGameController, being either IPlayGameController or
